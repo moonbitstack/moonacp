@@ -1,0 +1,29 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonacp/asgi"
+
+import {
+  "moonbitstack/moonacp",
+  "moonbitstack/moonasgi/spec",
+}
+
+// Values
+pub let limits : Limits
+
+pub fn to_asgi(&@moonacp.Agent, path? : String, hosts? : Array[String], limits? : Limits) -> async (@spec.Scope, async () -> @spec.Event, async (@spec.Event) -> Unit) -> Unit
+
+// Errors
+
+// Types and methods
+#derive(Eq)
+pub(all) struct Limits {
+  body_bytes : Int32
+  backlog : Int32
+  keepalive_ms : Int32
+  reply_ms : Int32
+}
+pub fn Limits::equal(Self, Self) -> Bool
+pub fn Limits::not_equal(Self, Self) -> Bool
+
+// Type aliases
+
+// Traits
