@@ -1,12 +1,1751 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbitstack/moonacp"
 
+import {
+  "moonbitlang/core/json",
+  "moonbitstack/moonjrpc",
+  "moonbitstack/moonjrpc/peer",
+}
+
 // Values
+pub let authentication_required : Int32
+
+pub fn connect(&Client, &@peer.Frames) -> Conn
+
+pub fn failure_of(Error) -> @moonjrpc.Failure
+
+pub let internal_error : Int32
+
+pub let invalid_params : Int32
+
+pub let invalid_request : Int32
+
+pub let method_not_found : Int32
+
+pub let parse_error : Int32
+
+pub let protocol_version : Int32
+
+pub fn refused_of(@moonjrpc.Failure) -> Refused
+
+pub let request_cancelled : Int32
+
+pub let resource_not_found : Int32
+
+pub fn serve(&Agent, &@peer.Frames) -> @peer.Peer
 
 // Errors
+#derive(Eq)
+pub(all) suberror Refused {
+  Refused(code~ : Int32, message~ : String, data~ : @json.Json?)
+  Unsupported(name~ : String)
+  Malformed(reason~ : String)
+  Closed(reason~ : String)
+}
+pub fn Refused::code(Self) -> Int32
+pub fn Refused::data(Self) -> @json.Json?
+pub fn Refused::equal(Self, Self) -> Bool
+pub fn Refused::failure(Self) -> @moonjrpc.Failure
+pub fn Refused::message(Self) -> String
+pub fn Refused::new(Int32, String, data? : @json.Json) -> Self
+pub fn Refused::not_equal(Self, Self) -> Bool
 
 // Types and methods
+#derive(Eq)
+pub(all) struct AgentAuthCapabilities {
+  logout : Bool
+  meta : @json.Json?
+}
+pub fn AgentAuthCapabilities::equal(Self, Self) -> Bool
+pub fn AgentAuthCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AgentAuthCapabilities::none() -> Self
+pub fn AgentAuthCapabilities::not_equal(Self, Self) -> Bool
+pub fn AgentAuthCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AgentAuthCapabilities
+pub impl @json.ToJson for AgentAuthCapabilities
+
+#derive(Eq)
+pub(all) struct AgentCapabilities {
+  load_session : Bool
+  prompt : PromptCapabilities
+  mcp : McpCapabilities
+  session : SessionCapabilities
+  auth : AgentAuthCapabilities?
+  meta : @json.Json?
+}
+pub fn AgentCapabilities::equal(Self, Self) -> Bool
+pub fn AgentCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AgentCapabilities::none() -> Self
+pub fn AgentCapabilities::not_equal(Self, Self) -> Bool
+pub fn AgentCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AgentCapabilities
+pub impl @json.ToJson for AgentCapabilities
+
+#derive(Eq)
+pub(all) struct Annotations {
+  audience : Array[Role]?
+  last_modified : String?
+  priority : Double?
+  meta : @json.Json?
+}
+pub fn Annotations::equal(Self, Self) -> Bool
+pub fn Annotations::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Annotations::not_equal(Self, Self) -> Bool
+pub fn Annotations::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Annotations
+pub impl @json.ToJson for Annotations
+
+#derive(Eq)
+pub(all) enum Answer {
+  Accept(Map[String, @json.Json]?)
+  Decline
+  Cancel
+  Other(String)
+}
+pub fn Answer::equal(Self, Self) -> Bool
+pub fn Answer::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Answer::not_equal(Self, Self) -> Bool
+pub fn Answer::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Answer
+pub impl @json.ToJson for Answer
+
+#derive(Eq)
+pub(all) struct AudioContent {
+  data : String
+  mime_type : String
+  annotations : Annotations?
+  meta : @json.Json?
+}
+pub fn AudioContent::equal(Self, Self) -> Bool
+pub fn AudioContent::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AudioContent::not_equal(Self, Self) -> Bool
+pub fn AudioContent::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AudioContent
+pub impl @json.ToJson for AudioContent
+
+#derive(Eq)
+pub(all) enum AuthMethod {
+  Terminal(AuthMethodTerminal)
+  Agent(AuthMethodAgent)
+}
+pub fn AuthMethod::equal(Self, Self) -> Bool
+pub fn AuthMethod::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AuthMethod::not_equal(Self, Self) -> Bool
+pub fn AuthMethod::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AuthMethod
+pub impl @json.ToJson for AuthMethod
+
+#derive(Eq)
+pub(all) struct AuthMethodAgent {
+  id : String
+  name : String
+  description : String?
+  meta : @json.Json?
+}
+pub fn AuthMethodAgent::equal(Self, Self) -> Bool
+pub fn AuthMethodAgent::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AuthMethodAgent::not_equal(Self, Self) -> Bool
+pub fn AuthMethodAgent::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AuthMethodAgent
+pub impl @json.ToJson for AuthMethodAgent
+
+#derive(Eq)
+pub(all) struct AuthMethodTerminal {
+  id : String
+  name : String
+  description : String?
+  args : Array[String]?
+  env : Map[String, String]?
+  meta : @json.Json?
+}
+pub fn AuthMethodTerminal::equal(Self, Self) -> Bool
+pub fn AuthMethodTerminal::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AuthMethodTerminal::not_equal(Self, Self) -> Bool
+pub fn AuthMethodTerminal::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AuthMethodTerminal
+pub impl @json.ToJson for AuthMethodTerminal
+
+#derive(Eq)
+pub(all) struct Authenticate {
+  method_id : String
+  meta : @json.Json?
+}
+pub fn Authenticate::equal(Self, Self) -> Bool
+pub fn Authenticate::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Authenticate::not_equal(Self, Self) -> Bool
+pub fn Authenticate::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Authenticate
+pub impl @json.ToJson for Authenticate
+
+#derive(Eq)
+pub(all) struct AvailableCommand {
+  name : String
+  description : String
+  input : CommandInput?
+  meta : @json.Json?
+}
+pub fn AvailableCommand::equal(Self, Self) -> Bool
+pub fn AvailableCommand::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AvailableCommand::not_equal(Self, Self) -> Bool
+pub fn AvailableCommand::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AvailableCommand
+pub impl @json.ToJson for AvailableCommand
+
+#derive(Eq)
+pub(all) struct AvailableCommands {
+  available_commands : Array[AvailableCommand]
+  meta : @json.Json?
+}
+pub fn AvailableCommands::equal(Self, Self) -> Bool
+pub fn AvailableCommands::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AvailableCommands::not_equal(Self, Self) -> Bool
+pub fn AvailableCommands::to_json(Self) -> @json.Json
+pub impl @json.FromJson for AvailableCommands
+pub impl @json.ToJson for AvailableCommands
+
+#derive(Eq)
+pub(all) struct BlobResource {
+  uri : String
+  blob : String
+  mime_type : String?
+  meta : @json.Json?
+}
+pub fn BlobResource::equal(Self, Self) -> Bool
+pub fn BlobResource::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn BlobResource::not_equal(Self, Self) -> Bool
+pub fn BlobResource::to_json(Self) -> @json.Json
+pub impl @json.FromJson for BlobResource
+pub impl @json.ToJson for BlobResource
+
+#derive(Eq)
+pub(all) struct BooleanField {
+  title : String?
+  description : String?
+  default : Bool?
+  meta : @json.Json?
+}
+pub fn BooleanField::equal(Self, Self) -> Bool
+pub fn BooleanField::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn BooleanField::not_equal(Self, Self) -> Bool
+pub fn BooleanField::to_json(Self) -> @json.Json
+pub impl @json.FromJson for BooleanField
+pub impl @json.ToJson for BooleanField
+
+#derive(Eq)
+pub(all) struct Cancel {
+  session_id : String
+  meta : @json.Json?
+}
+pub fn Cancel::equal(Self, Self) -> Bool
+pub fn Cancel::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Cancel::not_equal(Self, Self) -> Bool
+pub fn Cancel::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Cancel
+pub impl @json.ToJson for Cancel
+
+#derive(Eq)
+pub(all) enum ChoiceItems {
+  Values(Array[String])
+  Titled(Array[EnumOption])
+}
+pub fn ChoiceItems::equal(Self, Self) -> Bool
+pub fn ChoiceItems::not_equal(Self, Self) -> Bool
+pub fn ChoiceItems::to_json(Self) -> @json.Json
+pub impl @json.ToJson for ChoiceItems
+
+#derive(Eq)
+pub(all) struct ClientAuthCapabilities {
+  terminal : Bool
+  meta : @json.Json?
+}
+pub fn ClientAuthCapabilities::equal(Self, Self) -> Bool
+pub fn ClientAuthCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ClientAuthCapabilities::none() -> Self
+pub fn ClientAuthCapabilities::not_equal(Self, Self) -> Bool
+pub fn ClientAuthCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ClientAuthCapabilities
+pub impl @json.ToJson for ClientAuthCapabilities
+
+#derive(Eq)
+pub(all) struct ClientCapabilities {
+  fs : FileSystemCapabilities
+  terminal : Bool
+  session : ClientSessionCapabilities?
+  auth : ClientAuthCapabilities?
+  elicitation : ElicitationCapabilities?
+  meta : @json.Json?
+}
+pub fn ClientCapabilities::equal(Self, Self) -> Bool
+pub fn ClientCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ClientCapabilities::none() -> Self
+pub fn ClientCapabilities::not_equal(Self, Self) -> Bool
+pub fn ClientCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ClientCapabilities
+pub impl @json.ToJson for ClientCapabilities
+
+#derive(Eq)
+pub(all) struct ClientSessionCapabilities {
+  compaction : Bool
+  config_options : Bool
+  booleans : Bool
+  notices : Bool
+  meta : @json.Json?
+}
+pub fn ClientSessionCapabilities::equal(Self, Self) -> Bool
+pub fn ClientSessionCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ClientSessionCapabilities::none() -> Self
+pub fn ClientSessionCapabilities::not_equal(Self, Self) -> Bool
+pub fn ClientSessionCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ClientSessionCapabilities
+pub impl @json.ToJson for ClientSessionCapabilities
+
+#derive(Eq)
+pub(all) struct CloseSession {
+  session_id : String
+  meta : @json.Json?
+}
+pub fn CloseSession::equal(Self, Self) -> Bool
+pub fn CloseSession::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn CloseSession::not_equal(Self, Self) -> Bool
+pub fn CloseSession::to_json(Self) -> @json.Json
+pub impl @json.FromJson for CloseSession
+pub impl @json.ToJson for CloseSession
+
+#derive(Eq)
+pub(all) struct CommandInput {
+  hint : String
+  meta : @json.Json?
+}
+pub fn CommandInput::equal(Self, Self) -> Bool
+pub fn CommandInput::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn CommandInput::not_equal(Self, Self) -> Bool
+pub fn CommandInput::to_json(Self) -> @json.Json
+pub impl @json.FromJson for CommandInput
+pub impl @json.ToJson for CommandInput
+
+#derive(Eq)
+pub(all) struct Compaction {
+  compaction_id : String
+  status : CompactionStatus
+  summary : Array[ContentBlock]?
+  error : String?
+  meta : @json.Json?
+}
+pub fn Compaction::equal(Self, Self) -> Bool
+pub fn Compaction::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Compaction::not_equal(Self, Self) -> Bool
+pub fn Compaction::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Compaction
+pub impl @json.ToJson for Compaction
+
+#derive(Eq)
+pub(all) enum CompactionStatus {
+  InProgress
+  Completed
+  Failed
+  Cancelled
+  Other(String)
+}
+pub fn CompactionStatus::equal(Self, Self) -> Bool
+pub fn CompactionStatus::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn CompactionStatus::not_equal(Self, Self) -> Bool
+pub fn CompactionStatus::of(String) -> Self
+pub fn CompactionStatus::to_json(Self) -> @json.Json
+pub fn CompactionStatus::to_string(Self) -> String
+pub impl @json.FromJson for CompactionStatus
+pub impl @json.ToJson for CompactionStatus
+
+#derive(Eq)
+pub(all) struct CompactionSummary {
+  compaction_id : String
+  content : ContentBlock
+  meta : @json.Json?
+}
+pub fn CompactionSummary::equal(Self, Self) -> Bool
+pub fn CompactionSummary::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn CompactionSummary::not_equal(Self, Self) -> Bool
+pub fn CompactionSummary::to_json(Self) -> @json.Json
+pub impl @json.FromJson for CompactionSummary
+pub impl @json.ToJson for CompactionSummary
+
+#derive(Eq)
+pub(all) enum ConfigCategory {
+  Mode
+  Model
+  ModelConfig
+  ThoughtLevel
+  Other(String)
+}
+pub fn ConfigCategory::equal(Self, Self) -> Bool
+pub fn ConfigCategory::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ConfigCategory::not_equal(Self, Self) -> Bool
+pub fn ConfigCategory::of(String) -> Self
+pub fn ConfigCategory::to_json(Self) -> @json.Json
+pub fn ConfigCategory::to_string(Self) -> String
+pub impl @json.FromJson for ConfigCategory
+pub impl @json.ToJson for ConfigCategory
+
+#derive(Eq)
+pub(all) struct ConfigChoice {
+  value : String
+  name : String
+  description : String?
+  meta : @json.Json?
+}
+pub fn ConfigChoice::equal(Self, Self) -> Bool
+pub fn ConfigChoice::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ConfigChoice::not_equal(Self, Self) -> Bool
+pub fn ConfigChoice::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ConfigChoice
+pub impl @json.ToJson for ConfigChoice
+
+#derive(Eq)
+pub(all) enum ConfigChoices {
+  Flat(Array[ConfigChoice])
+  Grouped(Array[ConfigGroup])
+}
+pub fn ConfigChoices::equal(Self, Self) -> Bool
+pub fn ConfigChoices::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ConfigChoices::not_equal(Self, Self) -> Bool
+pub fn ConfigChoices::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ConfigChoices
+pub impl @json.ToJson for ConfigChoices
+
+#derive(Eq)
+pub(all) struct ConfigGroup {
+  group : String
+  name : String
+  options : Array[ConfigChoice]
+  meta : @json.Json?
+}
+pub fn ConfigGroup::equal(Self, Self) -> Bool
+pub fn ConfigGroup::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ConfigGroup::not_equal(Self, Self) -> Bool
+pub fn ConfigGroup::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ConfigGroup
+pub impl @json.ToJson for ConfigGroup
+
+#derive(Eq)
+pub(all) struct ConfigOption {
+  id : String
+  name : String
+  description : String?
+  category : ConfigCategory?
+  value : ConfigValue
+  meta : @json.Json?
+}
+pub fn ConfigOption::equal(Self, Self) -> Bool
+pub fn ConfigOption::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ConfigOption::not_equal(Self, Self) -> Bool
+pub fn ConfigOption::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ConfigOption
+pub impl @json.ToJson for ConfigOption
+
+#derive(Eq)
+pub(all) enum ConfigValue {
+  Select(String, ConfigChoices)
+  Boolean(Bool)
+}
+pub fn ConfigValue::equal(Self, Self) -> Bool
+pub fn ConfigValue::not_equal(Self, Self) -> Bool
+pub fn ConfigValue::to_json(Self) -> @json.Json
+pub impl @json.ToJson for ConfigValue
+
+#derive(Eq)
+pub(all) enum ConfigValueId {
+  Value(String)
+  Boolean(Bool)
+}
+pub fn ConfigValueId::equal(Self, Self) -> Bool
+pub fn ConfigValueId::not_equal(Self, Self) -> Bool
+
+pub struct Conn {
+  peer : @peer.Peer
+  client : &Client
+}
+pub async fn Conn::authenticate(Self, Authenticate) -> Unit raise Refused
+pub async fn Conn::call(Self, String, @json.Json) -> @json.Json raise Refused
+pub async fn Conn::cancel(Self, String) -> Unit raise Refused
+pub fn Conn::client(Self) -> &Client
+pub async fn Conn::close_session(Self, CloseSession) -> Unit raise Refused
+pub async fn Conn::delete_session(Self, DeleteSession) -> Unit raise Refused
+pub async fn Conn::initialize(Self, Initialize) -> Initialized raise Refused
+pub async fn Conn::list_sessions(Self, ListSessions) -> SessionList raise Refused
+pub async fn Conn::load_session(Self, LoadSession) -> SessionStarted raise Refused
+pub async fn Conn::logout(Self) -> Unit raise Refused
+pub async fn Conn::new_session(Self, NewSession) -> SessionStarted raise Refused
+pub async fn Conn::notify(Self, String, @json.Json) -> Unit raise Refused
+pub async fn Conn::prompt(Self, Prompt) -> PromptResult raise Refused
+pub async fn Conn::resume_session(Self, ResumeSession) -> SessionStarted raise Refused
+pub async fn Conn::run(Self) -> Unit
+pub async fn Conn::set_config_option(Self, SetConfigOption) -> Array[ConfigOption] raise Refused
+pub async fn Conn::set_mode(Self, SetMode) -> Unit raise Refused
+
+#derive(Eq)
+pub(all) struct Content {
+  content : ContentBlock
+  meta : @json.Json?
+}
+pub fn Content::equal(Self, Self) -> Bool
+pub fn Content::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Content::not_equal(Self, Self) -> Bool
+pub fn Content::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Content
+pub impl @json.ToJson for Content
+
+#derive(Eq)
+pub(all) enum ContentBlock {
+  Text(TextContent)
+  Image(ImageContent)
+  Audio(AudioContent)
+  ResourceLink(ResourceLink)
+  Resource(EmbeddedResource)
+}
+pub fn ContentBlock::equal(Self, Self) -> Bool
+pub fn ContentBlock::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ContentBlock::not_equal(Self, Self) -> Bool
+pub fn ContentBlock::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ContentBlock
+pub impl @json.ToJson for ContentBlock
+
+#derive(Eq)
+pub(all) struct ContentChunk {
+  content : ContentBlock
+  message_id : String?
+  meta : @json.Json?
+}
+pub fn ContentChunk::equal(Self, Self) -> Bool
+pub fn ContentChunk::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ContentChunk::not_equal(Self, Self) -> Bool
+pub fn ContentChunk::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ContentChunk
+pub impl @json.ToJson for ContentChunk
+
+#derive(Eq)
+pub(all) struct Cost {
+  amount : Double
+  currency : String
+  meta : @json.Json?
+}
+pub fn Cost::equal(Self, Self) -> Bool
+pub fn Cost::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Cost::not_equal(Self, Self) -> Bool
+pub fn Cost::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Cost
+pub impl @json.ToJson for Cost
+
+#derive(Eq)
+pub(all) struct DeleteSession {
+  session_id : String
+  meta : @json.Json?
+}
+pub fn DeleteSession::equal(Self, Self) -> Bool
+pub fn DeleteSession::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn DeleteSession::not_equal(Self, Self) -> Bool
+pub fn DeleteSession::to_json(Self) -> @json.Json
+pub impl @json.FromJson for DeleteSession
+pub impl @json.ToJson for DeleteSession
+
+#derive(Eq)
+pub(all) struct Diff {
+  path : String
+  new_text : String
+  old_text : String?
+  meta : @json.Json?
+}
+pub fn Diff::equal(Self, Self) -> Bool
+pub fn Diff::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Diff::not_equal(Self, Self) -> Bool
+pub fn Diff::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Diff
+pub impl @json.ToJson for Diff
+
+#derive(Eq)
+pub(all) enum ElicitScope {
+  OfSession(String, String?)
+  OfRequest(@json.Json)
+}
+pub fn ElicitScope::equal(Self, Self) -> Bool
+pub fn ElicitScope::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ElicitScope::not_equal(Self, Self) -> Bool
+pub fn ElicitScope::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ElicitScope
+pub impl @json.ToJson for ElicitScope
+
+#derive(Eq)
+pub(all) enum Elicitation {
+  Form(FormRequest)
+  Url(UrlRequest)
+}
+pub fn Elicitation::equal(Self, Self) -> Bool
+pub fn Elicitation::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Elicitation::not_equal(Self, Self) -> Bool
+pub fn Elicitation::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Elicitation
+pub impl @json.ToJson for Elicitation
+
+#derive(Eq)
+pub(all) struct ElicitationCapabilities {
+  form : Bool
+  url : Bool
+  meta : @json.Json?
+}
+pub fn ElicitationCapabilities::equal(Self, Self) -> Bool
+pub fn ElicitationCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ElicitationCapabilities::none() -> Self
+pub fn ElicitationCapabilities::not_equal(Self, Self) -> Bool
+pub fn ElicitationCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ElicitationCapabilities
+pub impl @json.ToJson for ElicitationCapabilities
+
+#derive(Eq)
+pub(all) struct ElicitationSchema {
+  properties : Map[String, Field]
+  required : Array[String]?
+  title : String?
+  description : String?
+  meta : @json.Json?
+}
+pub fn ElicitationSchema::equal(Self, Self) -> Bool
+pub fn ElicitationSchema::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ElicitationSchema::not_equal(Self, Self) -> Bool
+pub fn ElicitationSchema::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ElicitationSchema
+pub impl @json.ToJson for ElicitationSchema
+
+#derive(Eq)
+pub(all) struct EmbeddedResource {
+  resource : Resource
+  annotations : Annotations?
+  meta : @json.Json?
+}
+pub fn EmbeddedResource::equal(Self, Self) -> Bool
+pub fn EmbeddedResource::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn EmbeddedResource::not_equal(Self, Self) -> Bool
+pub fn EmbeddedResource::to_json(Self) -> @json.Json
+pub impl @json.FromJson for EmbeddedResource
+pub impl @json.ToJson for EmbeddedResource
+
+#derive(Eq)
+pub(all) struct EnumOption {
+  value : String
+  title : String
+  description : String?
+  meta : @json.Json?
+}
+pub fn EnumOption::equal(Self, Self) -> Bool
+pub fn EnumOption::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn EnumOption::not_equal(Self, Self) -> Bool
+pub fn EnumOption::to_json(Self) -> @json.Json
+pub impl @json.FromJson for EnumOption
+pub impl @json.ToJson for EnumOption
+
+#derive(Eq)
+pub(all) struct EnvVariable {
+  name : String
+  value : String
+  meta : @json.Json?
+}
+pub fn EnvVariable::equal(Self, Self) -> Bool
+pub fn EnvVariable::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn EnvVariable::not_equal(Self, Self) -> Bool
+pub fn EnvVariable::to_json(Self) -> @json.Json
+pub impl @json.FromJson for EnvVariable
+pub impl @json.ToJson for EnvVariable
+
+#derive(Eq)
+pub(all) struct ExitStatus {
+  exit_code : Int64?
+  signal : String?
+  meta : @json.Json?
+}
+pub fn ExitStatus::equal(Self, Self) -> Bool
+pub fn ExitStatus::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ExitStatus::not_equal(Self, Self) -> Bool
+pub fn ExitStatus::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ExitStatus
+pub impl @json.ToJson for ExitStatus
+
+#derive(Eq)
+pub(all) enum Field {
+  Text(TextField)
+  Number(NumberField)
+  Integer(IntegerField)
+  Boolean(BooleanField)
+  MultiSelect(MultiSelectField)
+  Other(@json.Json)
+}
+pub fn Field::equal(Self, Self) -> Bool
+pub fn Field::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Field::not_equal(Self, Self) -> Bool
+pub fn Field::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Field
+pub impl @json.ToJson for Field
+
+#derive(Eq)
+pub(all) struct FileSystemCapabilities {
+  read_text_file : Bool
+  write_text_file : Bool
+  meta : @json.Json?
+}
+pub fn FileSystemCapabilities::equal(Self, Self) -> Bool
+pub fn FileSystemCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn FileSystemCapabilities::none() -> Self
+pub fn FileSystemCapabilities::not_equal(Self, Self) -> Bool
+pub fn FileSystemCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for FileSystemCapabilities
+pub impl @json.ToJson for FileSystemCapabilities
+
+#derive(Eq)
+pub(all) struct FileText {
+  content : String
+  meta : @json.Json?
+}
+pub fn FileText::equal(Self, Self) -> Bool
+pub fn FileText::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn FileText::not_equal(Self, Self) -> Bool
+pub fn FileText::to_json(Self) -> @json.Json
+pub impl @json.FromJson for FileText
+pub impl @json.ToJson for FileText
+
+#derive(Eq)
+pub(all) struct FormRequest {
+  message : String
+  schema : ElicitationSchema
+  scope : ElicitScope
+  meta : @json.Json?
+}
+pub fn FormRequest::equal(Self, Self) -> Bool
+pub fn FormRequest::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn FormRequest::not_equal(Self, Self) -> Bool
+pub fn FormRequest::to_json(Self) -> @json.Json
+pub impl @json.FromJson for FormRequest
+pub impl @json.ToJson for FormRequest
+
+#derive(Eq)
+pub(all) struct HttpHeader {
+  name : String
+  value : String
+  meta : @json.Json?
+}
+pub fn HttpHeader::equal(Self, Self) -> Bool
+pub fn HttpHeader::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn HttpHeader::not_equal(Self, Self) -> Bool
+pub fn HttpHeader::to_json(Self) -> @json.Json
+pub impl @json.FromJson for HttpHeader
+pub impl @json.ToJson for HttpHeader
+
+#derive(Eq)
+pub(all) struct ImageContent {
+  data : String
+  mime_type : String
+  uri : String?
+  annotations : Annotations?
+  meta : @json.Json?
+}
+pub fn ImageContent::equal(Self, Self) -> Bool
+pub fn ImageContent::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ImageContent::not_equal(Self, Self) -> Bool
+pub fn ImageContent::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ImageContent
+pub impl @json.ToJson for ImageContent
+
+#derive(Eq)
+pub(all) struct Implementation {
+  name : String
+  version : String
+  title : String?
+  meta : @json.Json?
+}
+pub fn Implementation::equal(Self, Self) -> Bool
+pub fn Implementation::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Implementation::new(String, String) -> Self
+pub fn Implementation::not_equal(Self, Self) -> Bool
+pub fn Implementation::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Implementation
+pub impl @json.ToJson for Implementation
+
+#derive(Eq)
+pub(all) struct Initialize {
+  protocol_version : Int32
+  client_capabilities : ClientCapabilities
+  client_info : Implementation?
+  meta : @json.Json?
+}
+pub fn Initialize::equal(Self, Self) -> Bool
+pub fn Initialize::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Initialize::not_equal(Self, Self) -> Bool
+pub fn Initialize::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Initialize
+pub impl @json.ToJson for Initialize
+
+#derive(Eq)
+pub(all) struct Initialized {
+  protocol_version : Int32
+  capabilities : AgentCapabilities
+  auth_methods : Array[AuthMethod]
+  agent_info : Implementation?
+  meta : @json.Json?
+}
+pub fn Initialized::equal(Self, Self) -> Bool
+pub fn Initialized::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Initialized::new() -> Self
+pub fn Initialized::not_equal(Self, Self) -> Bool
+pub fn Initialized::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Initialized
+pub impl @json.ToJson for Initialized
+
+#derive(Eq)
+pub(all) struct IntegerField {
+  title : String?
+  description : String?
+  minimum : Int64?
+  maximum : Int64?
+  default : Int64?
+  meta : @json.Json?
+}
+pub fn IntegerField::equal(Self, Self) -> Bool
+pub fn IntegerField::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn IntegerField::not_equal(Self, Self) -> Bool
+pub fn IntegerField::to_json(Self) -> @json.Json
+pub impl @json.FromJson for IntegerField
+pub impl @json.ToJson for IntegerField
+
+#derive(Eq)
+pub(all) struct ListSessions {
+  cwd : String?
+  cursor : String?
+  meta : @json.Json?
+}
+pub fn ListSessions::equal(Self, Self) -> Bool
+pub fn ListSessions::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ListSessions::not_equal(Self, Self) -> Bool
+pub fn ListSessions::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ListSessions
+pub impl @json.ToJson for ListSessions
+
+#derive(Eq)
+pub(all) struct LoadSession {
+  session_id : String
+  cwd : String
+  additional_directories : Array[String]?
+  mcp_servers : Array[McpServer]
+  meta : @json.Json?
+}
+pub fn LoadSession::equal(Self, Self) -> Bool
+pub fn LoadSession::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn LoadSession::not_equal(Self, Self) -> Bool
+pub fn LoadSession::to_json(Self) -> @json.Json
+pub impl @json.FromJson for LoadSession
+pub impl @json.ToJson for LoadSession
+
+#derive(Eq)
+pub(all) struct McpCapabilities {
+  http : Bool
+  sse : Bool
+  meta : @json.Json?
+}
+pub fn McpCapabilities::equal(Self, Self) -> Bool
+pub fn McpCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn McpCapabilities::none() -> Self
+pub fn McpCapabilities::not_equal(Self, Self) -> Bool
+pub fn McpCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for McpCapabilities
+pub impl @json.ToJson for McpCapabilities
+
+#derive(Eq)
+pub(all) struct McpHttp {
+  name : String
+  url : String
+  headers : Array[HttpHeader]
+  meta : @json.Json?
+}
+pub fn McpHttp::equal(Self, Self) -> Bool
+pub fn McpHttp::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn McpHttp::not_equal(Self, Self) -> Bool
+pub fn McpHttp::to_json(Self) -> @json.Json
+pub impl @json.FromJson for McpHttp
+pub impl @json.ToJson for McpHttp
+
+#derive(Eq)
+pub(all) enum McpServer {
+  Http(McpHttp)
+  Sse(McpSse)
+  Stdio(McpStdio)
+}
+pub fn McpServer::equal(Self, Self) -> Bool
+pub fn McpServer::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn McpServer::not_equal(Self, Self) -> Bool
+pub fn McpServer::to_json(Self) -> @json.Json
+pub impl @json.FromJson for McpServer
+pub impl @json.ToJson for McpServer
+
+#derive(Eq)
+pub(all) struct McpSse {
+  name : String
+  url : String
+  headers : Array[HttpHeader]
+  meta : @json.Json?
+}
+pub fn McpSse::equal(Self, Self) -> Bool
+pub fn McpSse::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn McpSse::not_equal(Self, Self) -> Bool
+pub fn McpSse::to_json(Self) -> @json.Json
+pub impl @json.FromJson for McpSse
+pub impl @json.ToJson for McpSse
+
+#derive(Eq)
+pub(all) struct McpStdio {
+  name : String
+  command : String
+  args : Array[String]
+  env : Array[EnvVariable]
+  meta : @json.Json?
+}
+pub fn McpStdio::equal(Self, Self) -> Bool
+pub fn McpStdio::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn McpStdio::not_equal(Self, Self) -> Bool
+pub fn McpStdio::to_json(Self) -> @json.Json
+pub impl @json.FromJson for McpStdio
+pub impl @json.ToJson for McpStdio
+
+#derive(Eq)
+pub(all) struct ModeChanged {
+  current_mode_id : String
+  meta : @json.Json?
+}
+pub fn ModeChanged::equal(Self, Self) -> Bool
+pub fn ModeChanged::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ModeChanged::not_equal(Self, Self) -> Bool
+pub fn ModeChanged::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ModeChanged
+pub impl @json.ToJson for ModeChanged
+
+#derive(Eq)
+pub(all) struct MultiSelectField {
+  title : String?
+  description : String?
+  min_items : Int64?
+  max_items : Int64?
+  items : ChoiceItems
+  default : Array[String]?
+  meta : @json.Json?
+}
+pub fn MultiSelectField::equal(Self, Self) -> Bool
+pub fn MultiSelectField::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn MultiSelectField::not_equal(Self, Self) -> Bool
+pub fn MultiSelectField::to_json(Self) -> @json.Json
+pub impl @json.FromJson for MultiSelectField
+pub impl @json.ToJson for MultiSelectField
+
+#derive(Eq)
+pub(all) struct NewSession {
+  cwd : String
+  additional_directories : Array[String]?
+  mcp_servers : Array[McpServer]
+  meta : @json.Json?
+}
+pub fn NewSession::equal(Self, Self) -> Bool
+pub fn NewSession::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn NewSession::not_equal(Self, Self) -> Bool
+pub fn NewSession::to_json(Self) -> @json.Json
+pub impl @json.FromJson for NewSession
+pub impl @json.ToJson for NewSession
+
+#derive(Eq)
+pub(all) struct Notice {
+  severity : Severity
+  title : String
+  description : String?
+  meta : @json.Json?
+}
+pub fn Notice::equal(Self, Self) -> Bool
+pub fn Notice::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Notice::not_equal(Self, Self) -> Bool
+pub fn Notice::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Notice
+pub impl @json.ToJson for Notice
+
+#derive(Eq)
+pub(all) struct NumberField {
+  title : String?
+  description : String?
+  minimum : Double?
+  maximum : Double?
+  default : Double?
+  meta : @json.Json?
+}
+pub fn NumberField::equal(Self, Self) -> Bool
+pub fn NumberField::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn NumberField::not_equal(Self, Self) -> Bool
+pub fn NumberField::to_json(Self) -> @json.Json
+pub impl @json.FromJson for NumberField
+pub impl @json.ToJson for NumberField
+
+#derive(Eq)
+pub(all) enum Outcome {
+  Selected(String)
+  Cancelled
+}
+pub fn Outcome::equal(Self, Self) -> Bool
+pub fn Outcome::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Outcome::not_equal(Self, Self) -> Bool
+pub fn Outcome::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Outcome
+pub impl @json.ToJson for Outcome
+
+#derive(Eq)
+pub(all) struct Permission {
+  tool_call : ToolCallUpdate
+  options : Array[PermissionOption]
+  meta : @json.Json?
+}
+pub fn Permission::equal(Self, Self) -> Bool
+pub fn Permission::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Permission::not_equal(Self, Self) -> Bool
+pub fn Permission::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Permission
+pub impl @json.ToJson for Permission
+
+#derive(Eq)
+pub(all) struct PermissionOption {
+  option_id : String
+  name : String
+  kind : PermissionOptionKind
+  meta : @json.Json?
+}
+pub fn PermissionOption::equal(Self, Self) -> Bool
+pub fn PermissionOption::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PermissionOption::not_equal(Self, Self) -> Bool
+pub fn PermissionOption::to_json(Self) -> @json.Json
+pub impl @json.FromJson for PermissionOption
+pub impl @json.ToJson for PermissionOption
+
+#derive(Eq)
+pub(all) enum PermissionOptionKind {
+  AllowOnce
+  AllowAlways
+  RejectOnce
+  RejectAlways
+}
+pub fn PermissionOptionKind::equal(Self, Self) -> Bool
+pub fn PermissionOptionKind::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PermissionOptionKind::not_equal(Self, Self) -> Bool
+pub fn PermissionOptionKind::of(String) -> Self?
+pub fn PermissionOptionKind::to_json(Self) -> @json.Json
+pub fn PermissionOptionKind::to_string(Self) -> String
+pub impl @json.FromJson for PermissionOptionKind
+pub impl @json.ToJson for PermissionOptionKind
+
+#derive(Eq)
+pub(all) struct Plan {
+  entries : Array[PlanEntry]
+  meta : @json.Json?
+}
+pub fn Plan::equal(Self, Self) -> Bool
+pub fn Plan::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Plan::not_equal(Self, Self) -> Bool
+pub fn Plan::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Plan
+pub impl @json.ToJson for Plan
+
+#derive(Eq)
+pub(all) struct PlanEntry {
+  content : String
+  priority : PlanEntryPriority
+  status : PlanEntryStatus
+  meta : @json.Json?
+}
+pub fn PlanEntry::equal(Self, Self) -> Bool
+pub fn PlanEntry::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PlanEntry::not_equal(Self, Self) -> Bool
+pub fn PlanEntry::to_json(Self) -> @json.Json
+pub impl @json.FromJson for PlanEntry
+pub impl @json.ToJson for PlanEntry
+
+#derive(Eq)
+pub(all) enum PlanEntryPriority {
+  High
+  Medium
+  Low
+}
+pub fn PlanEntryPriority::equal(Self, Self) -> Bool
+pub fn PlanEntryPriority::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PlanEntryPriority::not_equal(Self, Self) -> Bool
+pub fn PlanEntryPriority::of(String) -> Self?
+pub fn PlanEntryPriority::to_json(Self) -> @json.Json
+pub fn PlanEntryPriority::to_string(Self) -> String
+pub impl @json.FromJson for PlanEntryPriority
+pub impl @json.ToJson for PlanEntryPriority
+
+#derive(Eq)
+pub(all) enum PlanEntryStatus {
+  Pending
+  InProgress
+  Completed
+}
+pub fn PlanEntryStatus::equal(Self, Self) -> Bool
+pub fn PlanEntryStatus::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PlanEntryStatus::not_equal(Self, Self) -> Bool
+pub fn PlanEntryStatus::of(String) -> Self?
+pub fn PlanEntryStatus::to_json(Self) -> @json.Json
+pub fn PlanEntryStatus::to_string(Self) -> String
+pub impl @json.FromJson for PlanEntryStatus
+pub impl @json.ToJson for PlanEntryStatus
+
+#derive(Eq)
+pub(all) struct Prompt {
+  session_id : String
+  prompt : Array[ContentBlock]
+  meta : @json.Json?
+}
+pub fn Prompt::equal(Self, Self) -> Bool
+pub fn Prompt::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Prompt::not_equal(Self, Self) -> Bool
+pub fn Prompt::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Prompt
+pub impl @json.ToJson for Prompt
+
+#derive(Eq)
+pub(all) struct PromptCapabilities {
+  image : Bool
+  audio : Bool
+  embedded_context : Bool
+  meta : @json.Json?
+}
+pub fn PromptCapabilities::equal(Self, Self) -> Bool
+pub fn PromptCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PromptCapabilities::none() -> Self
+pub fn PromptCapabilities::not_equal(Self, Self) -> Bool
+pub fn PromptCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for PromptCapabilities
+pub impl @json.ToJson for PromptCapabilities
+
+#derive(Eq)
+pub(all) struct PromptResult {
+  stop_reason : StopReason
+  meta : @json.Json?
+}
+pub fn PromptResult::equal(Self, Self) -> Bool
+pub fn PromptResult::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn PromptResult::not_equal(Self, Self) -> Bool
+pub fn PromptResult::to_json(Self) -> @json.Json
+pub impl @json.FromJson for PromptResult
+pub impl @json.ToJson for PromptResult
+
+#derive(Eq)
+pub(all) struct ReadTextFile {
+  session_id : String
+  path : String
+  line : Int64?
+  limit : Int64?
+  meta : @json.Json?
+}
+pub fn ReadTextFile::equal(Self, Self) -> Bool
+pub fn ReadTextFile::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ReadTextFile::not_equal(Self, Self) -> Bool
+pub fn ReadTextFile::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ReadTextFile
+pub impl @json.ToJson for ReadTextFile
+
+#derive(Eq)
+pub(all) enum Resource {
+  Text(TextResource)
+  Blob(BlobResource)
+}
+pub fn Resource::equal(Self, Self) -> Bool
+pub fn Resource::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Resource::not_equal(Self, Self) -> Bool
+pub fn Resource::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Resource
+pub impl @json.ToJson for Resource
+
+#derive(Eq)
+pub(all) struct ResourceLink {
+  uri : String
+  name : String
+  title : String?
+  description : String?
+  mime_type : String?
+  size : Int64?
+  annotations : Annotations?
+  meta : @json.Json?
+}
+pub fn ResourceLink::equal(Self, Self) -> Bool
+pub fn ResourceLink::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ResourceLink::not_equal(Self, Self) -> Bool
+pub fn ResourceLink::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ResourceLink
+pub impl @json.ToJson for ResourceLink
+
+#derive(Eq)
+pub(all) struct ResumeSession {
+  session_id : String
+  cwd : String
+  additional_directories : Array[String]?
+  mcp_servers : Array[McpServer]?
+  meta : @json.Json?
+}
+pub fn ResumeSession::equal(Self, Self) -> Bool
+pub fn ResumeSession::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ResumeSession::not_equal(Self, Self) -> Bool
+pub fn ResumeSession::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ResumeSession
+pub impl @json.ToJson for ResumeSession
+
+#derive(Eq)
+pub(all) enum Role {
+  Assistant
+  User
+}
+pub fn Role::equal(Self, Self) -> Bool
+pub fn Role::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Role::not_equal(Self, Self) -> Bool
+pub fn Role::of(String) -> Self?
+pub fn Role::to_json(Self) -> @json.Json
+pub fn Role::to_string(Self) -> String
+pub impl @json.FromJson for Role
+pub impl @json.ToJson for Role
+
+pub struct Session {
+  peer : @peer.Peer
+  id : String
+}
+pub async fn Session::elicit(Self, Elicitation) -> Answer raise Refused
+pub fn Session::id(Self) -> String
+pub async fn Session::read_text_file(Self, String, line? : Int64, limit? : Int64) -> String raise Refused
+pub async fn Session::request_permission(Self, Permission) -> Outcome raise Refused
+pub async fn Session::terminal(Self, String, args? : Array[String], env? : Array[EnvVariable], cwd? : String, output_byte_limit? : Int64) -> Terminal raise Refused
+pub async fn Session::update(Self, SessionUpdate) -> Unit raise Refused
+pub async fn Session::write_text_file(Self, String, String) -> Unit raise Refused
+
+#derive(Eq)
+pub(all) struct SessionCapabilities {
+  list : Bool
+  delete : Bool
+  additional_directories : Bool
+  resume_session : Bool
+  close : Bool
+  meta : @json.Json?
+}
+pub fn SessionCapabilities::equal(Self, Self) -> Bool
+pub fn SessionCapabilities::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionCapabilities::none() -> Self
+pub fn SessionCapabilities::not_equal(Self, Self) -> Bool
+pub fn SessionCapabilities::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionCapabilities
+pub impl @json.ToJson for SessionCapabilities
+
+#derive(Eq)
+pub(all) struct SessionInfo {
+  session_id : String
+  cwd : String
+  additional_directories : Array[String]?
+  title : String?
+  updated_at : String?
+  meta : @json.Json?
+}
+pub fn SessionInfo::equal(Self, Self) -> Bool
+pub fn SessionInfo::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionInfo::not_equal(Self, Self) -> Bool
+pub fn SessionInfo::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionInfo
+pub impl @json.ToJson for SessionInfo
+
+#derive(Eq)
+pub(all) struct SessionInfoChanged {
+  title : String?
+  updated_at : String?
+  meta : @json.Json?
+}
+pub fn SessionInfoChanged::equal(Self, Self) -> Bool
+pub fn SessionInfoChanged::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionInfoChanged::not_equal(Self, Self) -> Bool
+pub fn SessionInfoChanged::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionInfoChanged
+pub impl @json.ToJson for SessionInfoChanged
+
+#derive(Eq)
+pub(all) struct SessionList {
+  sessions : Array[SessionInfo]
+  next_cursor : String?
+  meta : @json.Json?
+}
+pub fn SessionList::equal(Self, Self) -> Bool
+pub fn SessionList::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionList::not_equal(Self, Self) -> Bool
+pub fn SessionList::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionList
+pub impl @json.ToJson for SessionList
+
+#derive(Eq)
+pub(all) struct SessionMode {
+  id : String
+  name : String
+  description : String?
+  meta : @json.Json?
+}
+pub fn SessionMode::equal(Self, Self) -> Bool
+pub fn SessionMode::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionMode::not_equal(Self, Self) -> Bool
+pub fn SessionMode::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionMode
+pub impl @json.ToJson for SessionMode
+
+#derive(Eq)
+pub(all) struct SessionModes {
+  current_mode_id : String
+  available_modes : Array[SessionMode]
+  meta : @json.Json?
+}
+pub fn SessionModes::equal(Self, Self) -> Bool
+pub fn SessionModes::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionModes::not_equal(Self, Self) -> Bool
+pub fn SessionModes::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionModes
+pub impl @json.ToJson for SessionModes
+
+#derive(Eq)
+pub(all) struct SessionNotification {
+  session_id : String
+  update : SessionUpdate
+  meta : @json.Json?
+}
+pub fn SessionNotification::equal(Self, Self) -> Bool
+pub fn SessionNotification::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionNotification::not_equal(Self, Self) -> Bool
+pub fn SessionNotification::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionNotification
+pub impl @json.ToJson for SessionNotification
+
+#derive(Eq)
+pub(all) struct SessionStarted {
+  session_id : String
+  modes : SessionModes?
+  config_options : Array[ConfigOption]?
+  meta : @json.Json?
+}
+pub fn SessionStarted::equal(Self, Self) -> Bool
+pub fn SessionStarted::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionStarted::not_equal(Self, Self) -> Bool
+pub fn SessionStarted::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionStarted
+pub impl @json.ToJson for SessionStarted
+
+#derive(Eq)
+pub(all) enum SessionUpdate {
+  UserMessageChunk(ContentChunk)
+  AgentMessageChunk(ContentChunk)
+  AgentThoughtChunk(ContentChunk)
+  ToolCall(ToolCall)
+  ToolCallUpdate(ToolCallUpdate)
+  Plan(Plan)
+  AvailableCommands(AvailableCommands)
+  ModeChanged(ModeChanged)
+  ConfigOptionChanged(Array[ConfigOption])
+  SessionInfoChanged(SessionInfoChanged)
+  Usage(Usage)
+  Notice(Notice)
+  Compaction(Compaction)
+  CompactionSummary(CompactionSummary)
+}
+pub fn SessionUpdate::equal(Self, Self) -> Bool
+pub fn SessionUpdate::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SessionUpdate::not_equal(Self, Self) -> Bool
+pub fn SessionUpdate::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SessionUpdate
+pub impl @json.ToJson for SessionUpdate
+
+#derive(Eq)
+pub(all) struct SetConfigOption {
+  session_id : String
+  config_id : String
+  value : ConfigValueId
+  meta : @json.Json?
+}
+pub fn SetConfigOption::equal(Self, Self) -> Bool
+pub fn SetConfigOption::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SetConfigOption::not_equal(Self, Self) -> Bool
+pub fn SetConfigOption::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SetConfigOption
+pub impl @json.ToJson for SetConfigOption
+
+#derive(Eq)
+pub(all) struct SetConfigOptions {
+  config_options : Array[ConfigOption]
+  meta : @json.Json?
+}
+pub fn SetConfigOptions::equal(Self, Self) -> Bool
+pub fn SetConfigOptions::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SetConfigOptions::not_equal(Self, Self) -> Bool
+pub fn SetConfigOptions::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SetConfigOptions
+pub impl @json.ToJson for SetConfigOptions
+
+#derive(Eq)
+pub(all) struct SetMode {
+  session_id : String
+  mode_id : String
+  meta : @json.Json?
+}
+pub fn SetMode::equal(Self, Self) -> Bool
+pub fn SetMode::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn SetMode::not_equal(Self, Self) -> Bool
+pub fn SetMode::to_json(Self) -> @json.Json
+pub impl @json.FromJson for SetMode
+pub impl @json.ToJson for SetMode
+
+#derive(Eq)
+pub(all) enum Severity {
+  Info
+  Warning
+  Error
+  Other(String)
+}
+pub fn Severity::equal(Self, Self) -> Bool
+pub fn Severity::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Severity::not_equal(Self, Self) -> Bool
+pub fn Severity::of(String) -> Self
+pub fn Severity::to_json(Self) -> @json.Json
+pub fn Severity::to_string(Self) -> String
+pub impl @json.FromJson for Severity
+pub impl @json.ToJson for Severity
+
+#derive(Eq)
+pub(all) enum StopReason {
+  EndTurn
+  MaxTokens
+  MaxTurnRequests
+  Refusal
+  Cancelled
+}
+pub fn StopReason::equal(Self, Self) -> Bool
+pub fn StopReason::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn StopReason::not_equal(Self, Self) -> Bool
+pub fn StopReason::of(String) -> Self?
+pub fn StopReason::to_json(Self) -> @json.Json
+pub fn StopReason::to_string(Self) -> String
+pub impl @json.FromJson for StopReason
+pub impl @json.ToJson for StopReason
+
+#derive(Eq)
+pub(all) enum StringFormat {
+  Email
+  Uri
+  Date
+  DateTime
+}
+pub fn StringFormat::equal(Self, Self) -> Bool
+pub fn StringFormat::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn StringFormat::not_equal(Self, Self) -> Bool
+pub fn StringFormat::of(String) -> Self?
+pub fn StringFormat::to_json(Self) -> @json.Json
+pub fn StringFormat::to_string(Self) -> String
+pub impl @json.FromJson for StringFormat
+pub impl @json.ToJson for StringFormat
+
+pub struct Terminal {
+  session : Session
+  terminal_id : String
+}
+pub fn Terminal::id(Self) -> String
+pub async fn Terminal::kill(Self) -> Unit raise Refused
+pub async fn Terminal::output(Self) -> TerminalOutput raise Refused
+pub fn Terminal::reference(Self) -> TerminalRef
+pub async fn Terminal::release(Self) -> Unit raise Refused
+pub async fn Terminal::wait(Self) -> ExitStatus raise Refused
+
+#derive(Eq)
+pub(all) struct TerminalCommand {
+  session_id : String
+  command : String
+  args : Array[String]?
+  env : Array[EnvVariable]?
+  cwd : String?
+  output_byte_limit : Int64?
+  meta : @json.Json?
+}
+pub fn TerminalCommand::equal(Self, Self) -> Bool
+pub fn TerminalCommand::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TerminalCommand::not_equal(Self, Self) -> Bool
+pub fn TerminalCommand::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TerminalCommand
+pub impl @json.ToJson for TerminalCommand
+
+#derive(Eq)
+pub(all) struct TerminalOpened {
+  terminal_id : String
+  meta : @json.Json?
+}
+pub fn TerminalOpened::equal(Self, Self) -> Bool
+pub fn TerminalOpened::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TerminalOpened::not_equal(Self, Self) -> Bool
+pub fn TerminalOpened::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TerminalOpened
+pub impl @json.ToJson for TerminalOpened
+
+#derive(Eq)
+pub(all) struct TerminalOutput {
+  output : String
+  truncated : Bool
+  exit_status : ExitStatus?
+  meta : @json.Json?
+}
+pub fn TerminalOutput::equal(Self, Self) -> Bool
+pub fn TerminalOutput::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TerminalOutput::not_equal(Self, Self) -> Bool
+pub fn TerminalOutput::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TerminalOutput
+pub impl @json.ToJson for TerminalOutput
+
+#derive(Eq)
+pub(all) struct TerminalRef {
+  terminal_id : String
+  meta : @json.Json?
+}
+pub fn TerminalRef::equal(Self, Self) -> Bool
+pub fn TerminalRef::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TerminalRef::new(String) -> Self
+pub fn TerminalRef::not_equal(Self, Self) -> Bool
+pub fn TerminalRef::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TerminalRef
+pub impl @json.ToJson for TerminalRef
+
+#derive(Eq)
+pub(all) struct TerminalRequest {
+  session_id : String
+  terminal_id : String
+  meta : @json.Json?
+}
+pub fn TerminalRequest::equal(Self, Self) -> Bool
+pub fn TerminalRequest::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TerminalRequest::not_equal(Self, Self) -> Bool
+pub fn TerminalRequest::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TerminalRequest
+pub impl @json.ToJson for TerminalRequest
+
+#derive(Eq)
+pub(all) struct TextContent {
+  text : String
+  annotations : Annotations?
+  meta : @json.Json?
+}
+pub fn TextContent::equal(Self, Self) -> Bool
+pub fn TextContent::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TextContent::not_equal(Self, Self) -> Bool
+pub fn TextContent::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TextContent
+pub impl @json.ToJson for TextContent
+
+#derive(Eq)
+pub(all) struct TextField {
+  title : String?
+  description : String?
+  min_length : Int64?
+  max_length : Int64?
+  pattern : String?
+  format : StringFormat?
+  default : String?
+  choices : Array[String]?
+  titled_choices : Array[EnumOption]?
+  meta : @json.Json?
+}
+pub fn TextField::equal(Self, Self) -> Bool
+pub fn TextField::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TextField::not_equal(Self, Self) -> Bool
+pub fn TextField::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TextField
+pub impl @json.ToJson for TextField
+
+#derive(Eq)
+pub(all) struct TextResource {
+  uri : String
+  text : String
+  mime_type : String?
+  meta : @json.Json?
+}
+pub fn TextResource::equal(Self, Self) -> Bool
+pub fn TextResource::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn TextResource::not_equal(Self, Self) -> Bool
+pub fn TextResource::to_json(Self) -> @json.Json
+pub impl @json.FromJson for TextResource
+pub impl @json.ToJson for TextResource
+
+#derive(Eq)
+pub(all) struct ToolCall {
+  tool_call_id : String
+  title : String
+  name : String?
+  kind : ToolKind?
+  status : ToolCallStatus?
+  content : Array[ToolCallContent]?
+  locations : Array[ToolCallLocation]?
+  raw_input : @json.Json?
+  raw_output : @json.Json?
+  meta : @json.Json?
+}
+pub fn ToolCall::equal(Self, Self) -> Bool
+pub fn ToolCall::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ToolCall::not_equal(Self, Self) -> Bool
+pub fn ToolCall::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ToolCall
+pub impl @json.ToJson for ToolCall
+
+#derive(Eq)
+pub(all) enum ToolCallContent {
+  Content(Content)
+  Diff(Diff)
+  Terminal(TerminalRef)
+}
+pub fn ToolCallContent::equal(Self, Self) -> Bool
+pub fn ToolCallContent::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ToolCallContent::not_equal(Self, Self) -> Bool
+pub fn ToolCallContent::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ToolCallContent
+pub impl @json.ToJson for ToolCallContent
+
+#derive(Eq)
+pub(all) struct ToolCallLocation {
+  path : String
+  line : Int64?
+  meta : @json.Json?
+}
+pub fn ToolCallLocation::equal(Self, Self) -> Bool
+pub fn ToolCallLocation::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ToolCallLocation::not_equal(Self, Self) -> Bool
+pub fn ToolCallLocation::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ToolCallLocation
+pub impl @json.ToJson for ToolCallLocation
+
+#derive(Eq)
+pub(all) enum ToolCallStatus {
+  Pending
+  InProgress
+  Completed
+  Failed
+}
+pub fn ToolCallStatus::equal(Self, Self) -> Bool
+pub fn ToolCallStatus::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ToolCallStatus::not_equal(Self, Self) -> Bool
+pub fn ToolCallStatus::of(String) -> Self?
+pub fn ToolCallStatus::to_json(Self) -> @json.Json
+pub fn ToolCallStatus::to_string(Self) -> String
+pub impl @json.FromJson for ToolCallStatus
+pub impl @json.ToJson for ToolCallStatus
+
+#derive(Eq)
+pub(all) struct ToolCallUpdate {
+  tool_call_id : String
+  kind : ToolKind?
+  status : ToolCallStatus?
+  title : String?
+  name : String?
+  content : Array[ToolCallContent]?
+  locations : Array[ToolCallLocation]?
+  raw_input : @json.Json?
+  raw_output : @json.Json?
+  meta : @json.Json?
+}
+pub fn ToolCallUpdate::equal(Self, Self) -> Bool
+pub fn ToolCallUpdate::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ToolCallUpdate::not_equal(Self, Self) -> Bool
+pub fn ToolCallUpdate::to_json(Self) -> @json.Json
+pub impl @json.FromJson for ToolCallUpdate
+pub impl @json.ToJson for ToolCallUpdate
+
+#derive(Eq)
+pub(all) enum ToolKind {
+  Read
+  Edit
+  Delete
+  Move
+  Search
+  Execute
+  Think
+  Fetch
+  SwitchMode
+  Other
+}
+pub fn ToolKind::equal(Self, Self) -> Bool
+pub fn ToolKind::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ToolKind::not_equal(Self, Self) -> Bool
+pub fn ToolKind::of(String) -> Self?
+pub fn ToolKind::to_json(Self) -> @json.Json
+pub fn ToolKind::to_string(Self) -> String
+pub impl @json.FromJson for ToolKind
+pub impl @json.ToJson for ToolKind
+
+#derive(Eq)
+pub(all) struct UrlRequest {
+  message : String
+  elicitation_id : String
+  url : String
+  scope : ElicitScope
+  meta : @json.Json?
+}
+pub fn UrlRequest::equal(Self, Self) -> Bool
+pub fn UrlRequest::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn UrlRequest::not_equal(Self, Self) -> Bool
+pub fn UrlRequest::to_json(Self) -> @json.Json
+pub impl @json.FromJson for UrlRequest
+pub impl @json.ToJson for UrlRequest
+
+#derive(Eq)
+pub(all) struct Usage {
+  used : Int64
+  size : Int64
+  cost : Cost?
+  meta : @json.Json?
+}
+pub fn Usage::equal(Self, Self) -> Bool
+pub fn Usage::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Usage::not_equal(Self, Self) -> Bool
+pub fn Usage::to_json(Self) -> @json.Json
+pub impl @json.FromJson for Usage
+pub impl @json.ToJson for Usage
+
+#derive(Eq)
+pub(all) struct WriteTextFile {
+  session_id : String
+  path : String
+  content : String
+  meta : @json.Json?
+}
+pub fn WriteTextFile::equal(Self, Self) -> Bool
+pub fn WriteTextFile::from_json(@json.Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn WriteTextFile::not_equal(Self, Self) -> Bool
+pub fn WriteTextFile::to_json(Self) -> @json.Json
+pub impl @json.FromJson for WriteTextFile
+pub impl @json.ToJson for WriteTextFile
 
 // Type aliases
 
 // Traits
+pub(open) trait Agent {
+  async fn initialize(Self, Initialize) -> Initialized raise Refused
+  async fn authenticate(Self, Authenticate) -> Unit raise Refused = _
+  async fn logout(Self) -> Unit raise Refused = _
+  async fn new_session(Self, NewSession) -> SessionStarted raise Refused
+  async fn load_session(Self, LoadSession, Session) -> SessionStarted raise Refused = _
+  async fn resume_session(Self, ResumeSession, Session) -> SessionStarted raise Refused = _
+  async fn list_sessions(Self, ListSessions) -> SessionList raise Refused = _
+  async fn delete_session(Self, DeleteSession) -> Unit raise Refused = _
+  async fn close_session(Self, CloseSession) -> Unit raise Refused = _
+  async fn set_mode(Self, SetMode) -> Unit raise Refused = _
+  async fn set_config_option(Self, SetConfigOption) -> Array[ConfigOption] raise Refused = _
+  async fn prompt(Self, Prompt, Session) -> StopReason raise Refused
+  async fn cancel(Self, String) -> Unit = _
+}
+
+pub(open) trait Client {
+  async fn update(Self, String, SessionUpdate) -> Unit
+  async fn request_permission(Self, Permission) -> Outcome raise Refused
+  async fn read_text_file(Self, ReadTextFile) -> String raise Refused = _
+  async fn write_text_file(Self, WriteTextFile) -> Unit raise Refused = _
+  async fn create_terminal(Self, TerminalCommand) -> String raise Refused = _
+  async fn terminal_output(Self, TerminalRequest) -> TerminalOutput raise Refused = _
+  async fn wait_for_terminal_exit(Self, TerminalRequest) -> ExitStatus raise Refused = _
+  async fn kill_terminal(Self, TerminalRequest) -> Unit raise Refused = _
+  async fn release_terminal(Self, TerminalRequest) -> Unit raise Refused = _
+  async fn elicit(Self, Elicitation) -> Answer raise Refused = _
+}

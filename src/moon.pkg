@@ -1,1 +1,12 @@
 // The Agent Client Protocol. https://agentclientprotocol.com
+import {
+  "moonbitlang/async",
+  "moonbitlang/core/json",
+  "moonbitstack/moonjrpc",
+  "moonbitstack/moonjrpc/peer",
+}
+
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/aqueue",
+} for "test"
