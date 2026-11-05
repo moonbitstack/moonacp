@@ -127,4 +127,6 @@ async fn main {
     }
     println("cancel: \{cancelled.stop_reason.to_string()}")
   })
+  // Closing the child's input is how it learns the conversation is over.
+  child.close()
 }

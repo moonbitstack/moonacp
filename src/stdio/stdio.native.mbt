@@ -17,10 +17,9 @@ pub struct Child {
   ///
   /// The connection to the child.
   conn : @moonacp.Conn
-  ///
   /// The child's process id, for a caller that wants to wait on it.
   pid : Int32
-  to_child : &@io.Writer
+  to_child : @process.WriteToProcess
 }
 
 ///|
@@ -75,4 +74,11 @@ pub async fn spawn(
 /// The connection to the child, runnable and callable.
 pub fn Child::conn(self : Child) -> @moonacp.Conn {
   self.conn
+}
+
+///|
+/// Closes the child's input, which is how an agent learns the client is done: it finishes what it
+/// is doing and exits. The read side ends with it, so a task blocked on `run` comes back.
+pub fn Child::close(self : Child) -> Unit {
+  self.to_child.close()
 }

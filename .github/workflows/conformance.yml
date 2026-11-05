@@ -71,14 +71,14 @@ jobs:
       - name: our client against the official TypeScript agent
         run: |
           moon build --target native src/examples/03-client
-          ./_build/native/debug/build/examples/03-client/03-client.exe \
+          timeout 120 ./_build/native/debug/build/examples/03-client/03-client.exe \
             node scripts/interop/ts-agent.mjs | tee client-report.txt
           grep -q "stop: end_turn" client-report.txt
           grep -q "answer: ts echo: hello from a MoonBit client" client-report.txt
 
       - name: our client against the official Python agent
         run: |
-          ./_build/native/debug/build/examples/03-client/03-client.exe \
+          timeout 120 ./_build/native/debug/build/examples/03-client/03-client.exe \
             python scripts/interop/py-agent.py | tee python-report.txt
           grep -q "stop: end_turn" python-report.txt
           grep -q "answer: python echo: hello from a MoonBit client" python-report.txt
