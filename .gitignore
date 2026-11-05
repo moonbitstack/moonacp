@@ -4,3 +4,4 @@
 _*
 target/
 scripts/interop/node_modules/
+scripts/interop/package-lock.json
