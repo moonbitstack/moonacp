@@ -1,0 +1,14 @@
+// Editors launch agents over a pipe: JSON-RPC messages, one to a line, on stdin and stdout.
+//
+// https://agentclientprotocol.com/protocol/v1/transports
+//
+// A process has descriptors only where there is a process, so this package is native.
+supported_targets = "+native"
+
+import {
+  "moonbitlang/async/io",
+  "moonbitlang/async/process",
+  "moonbitlang/async/stdio",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonjrpc/peer",
+}
