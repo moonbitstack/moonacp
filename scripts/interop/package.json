@@ -1,0 +1,9 @@
+{
+  "name": "moonacp-interop",
+  "private": true,
+  "type": "module",
+  "description": "Runs the official TypeScript client against a moonacp agent.",
+  "dependencies": {
+    "@agentclientprotocol/sdk": "2.4.0"
+  }
+}

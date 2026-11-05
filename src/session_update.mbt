@@ -51,6 +51,7 @@ pub(all) enum PlanEntryPriority {
 pub extend PlanEntryPriority with Eq::{equal, not_equal}
 
 ///|
+/// The name the priority travels as.
 pub fn PlanEntryPriority::to_string(self : PlanEntryPriority) -> String {
   match self {
     High => "high"
@@ -60,6 +61,7 @@ pub fn PlanEntryPriority::to_string(self : PlanEntryPriority) -> String {
 }
 
 ///|
+/// The priority with that name, or `None`.
 pub fn PlanEntryPriority::of(name : String) -> PlanEntryPriority? {
   match name {
     "high" => Some(High)
@@ -101,6 +103,7 @@ pub(all) enum PlanEntryStatus {
 pub extend PlanEntryStatus with Eq::{equal, not_equal}
 
 ///|
+/// The name the status travels as.
 pub fn PlanEntryStatus::to_string(self : PlanEntryStatus) -> String {
   match self {
     Pending => "pending"
@@ -110,6 +113,7 @@ pub fn PlanEntryStatus::to_string(self : PlanEntryStatus) -> String {
 }
 
 ///|
+/// The status with that name, or `None`.
 pub fn PlanEntryStatus::of(name : String) -> PlanEntryStatus? {
   match name {
     "pending" => Some(Pending)
@@ -476,6 +480,7 @@ pub(all) enum Severity {
 pub extend Severity with Eq::{equal, not_equal}
 
 ///|
+/// The name the severity travels as.
 pub fn Severity::to_string(self : Severity) -> String {
   match self {
     Info => "info"
@@ -486,6 +491,7 @@ pub fn Severity::to_string(self : Severity) -> String {
 }
 
 ///|
+/// The severity with that name; unknown names are kept as they came.
 pub fn Severity::of(name : String) -> Severity {
   match name {
     "info" => Info
@@ -568,6 +574,7 @@ pub(all) enum CompactionStatus {
 pub extend CompactionStatus with Eq::{equal, not_equal}
 
 ///|
+/// The name the state travels as.
 pub fn CompactionStatus::to_string(self : CompactionStatus) -> String {
   match self {
     InProgress => "in_progress"
@@ -579,6 +586,7 @@ pub fn CompactionStatus::to_string(self : CompactionStatus) -> String {
 }
 
 ///|
+/// The state with that name; unknown names are kept as they came.
 pub fn CompactionStatus::of(name : String) -> CompactionStatus {
   match name {
     "in_progress" => InProgress

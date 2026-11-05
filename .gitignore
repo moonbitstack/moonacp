@@ -3,3 +3,4 @@
 !.moonignore
 _*
 target/
+scripts/interop/node_modules/

@@ -93,6 +93,7 @@ pub(all) enum ConfigCategory {
 pub extend ConfigCategory with Eq::{equal, not_equal}
 
 ///|
+/// The name the category travels as.
 pub fn ConfigCategory::to_string(self : ConfigCategory) -> String {
   match self {
     Mode => "mode"
@@ -104,6 +105,7 @@ pub fn ConfigCategory::to_string(self : ConfigCategory) -> String {
 }
 
 ///|
+/// The category with that name; unknown names are kept as they came.
 pub fn ConfigCategory::of(name : String) -> ConfigCategory {
   match name {
     "mode" => Mode

@@ -15,6 +15,7 @@ pub(all) enum StringFormat {
 pub extend StringFormat with Eq::{equal, not_equal}
 
 ///|
+/// The name the format travels as.
 pub fn StringFormat::to_string(self : StringFormat) -> String {
   match self {
     Email => "email"
@@ -25,6 +26,7 @@ pub fn StringFormat::to_string(self : StringFormat) -> String {
 }
 
 ///|
+/// The format with that name, or `None`.
 pub fn StringFormat::of(name : String) -> StringFormat? {
   match name {
     "email" => Some(Email)

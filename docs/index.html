@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>moonacp — the Agent Client Protocol for MoonBit</title>
+    <meta
+      name="description"
+      content="Editors calling agents: sessions, streamed answers, permissions, file access and terminals, over stdio or one HTTP endpoint."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div class="brand">
+          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            <rect x="1" y="1" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <path d="M6 8.5 9 11l-3 2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M12 13.5h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <span>moonacp<small>Agent Client Protocol</small></span>
+        </div>
+        <nav>
+          <p>Start</p>
+          <a href="#top" aria-current="page">Overview</a>
+          <a href="#transport">Two transports</a>
+          <a href="#guide">Guide</a>
+          <a href="#consistency">Consistency</a>
+          <p>Reference</p>
+          <a href="api.html">API reference</a>
+          <a href="api.html#moonacp-stdio">stdio</a>
+          <a href="api.html#moonacp-asgi">asgi</a>
+        </nav>
+        <footer>
+          Schema v1.29.1.<br />
+          Transport RFD of 2026-11-04.
+        </footer>
+      </aside>
+
+      <main id="top">
+        <span class="eyebrow">Protocol library · MoonBit</span>
+        <h1>An editor talks,<br /><span class="thin">an agent answers.</span></h1>
+        <p class="lede">
+          Sessions, streamed answers, permission prompts, files and terminals — the conversation
+          between a code editor and a coding agent, in both directions, over the pipe an editor
+          launches an agent with or over a single HTTP endpoint.
+        </p>
+
+        <pre><code>moon add moonbitstack/moonacp</code></pre>
+
+        <div class="transcript">
+          <header>
+            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M2 4.5h12M2 8h12M2 11.5h8" stroke-linecap="round" />
+            </svg>
+            a real session, one message to a line
+          </header>
+          <div class="body">
+            <div class="line"><span class="who">editor</span><span class="what">{"id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{}}}</span></div>
+            <div class="line agent"><span class="who">agent</span><span class="what">{"id":1,"result":{"protocolVersion":1,"agentCapabilities":{"loadSession":true,…}}}</span></div>
+            <div class="line"><span class="who">editor</span><span class="what">{"id":2,"method":"session/new","params":{"cwd":"/work","mcpServers":[]}}</span></div>
+            <div class="line agent"><span class="who">agent</span><span class="what">{"id":2,"result":{"sessionId":"notes-1","modes":{…},"configOptions":[…]}}</span></div>
+            <div class="line"><span class="who">editor</span><span class="what">{"id":3,"method":"session/prompt","params":{"sessionId":"notes-1","prompt":[{"type":"text","text":"hello"}]}}</span></div>
+            <div class="line agent"><span class="who">agent</span><span class="what">{"method":"session/update","params":{"sessionId":"notes-1","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"You said: hello"}}}}</span></div>
+            <div class="line"><span class="who">editor</span><span class="what">{"method":"session/cancel","params":{"sessionId":"notes-1"}}</span></div>
+            <div class="line agent"><span class="who">agent</span><span class="what">{"id":3,"result":{"stopReason":"cancelled"}}</span></div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke-linecap="round" /></svg>
+              Both sides
+            </h4>
+            <p>An <code>Agent</code> to implement as a server, a <code>Client</code> to implement as an editor, and the session handle each of them talks through.</p>
+          </div>
+          <div class="card">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5" /><path d="M5 8h6" stroke-linecap="round" /></svg>
+              One transport, twice
+            </h4>
+            <p><code>@stdio</code> for the pipe an editor owns, <code>@asgi</code> for one endpoint carrying HTTP streams and a WebSocket.</p>
+          </div>
+          <div class="card">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 2v4M8 10v4M2 8h4M10 8h4" stroke-linecap="round" /></svg>
+              Cancellation that lands
+            </h4>
+            <p>A cancelled turn stops at its next await and still answers once, even when the cancel arrives before the turn has started.</p>
+          </div>
+          <div class="card">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12V4h8v8" stroke-linejoin="round" /><path d="M4 8h8" stroke-linecap="round" /></svg>
+              Nothing invented
+            </h4>
+            <p>Every message is the published schema's own shape; each type reads and writes its wire form once, and nothing else.</p>
+          </div>
+        </div>
+
+        <h2 id="transport">Two transports, one protocol</h2>
+        <p>
+          An editor that started the agent talks to it on the process's standard input and output.
+          An agent behind a network gets an ASGI application instead: one path, POST for what the
+          client says, long-lived GET streams for what the agent answers, DELETE to end a
+          connection, and a WebSocket upgrade that carries the same messages on a single channel.
+        </p>
+
+        <!-- nocheck -->
+        <pre><code>import {
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/stdio",
+}
+
+async fn main {
+  let agent : &amp;@moonacp.Agent = MyAgent::new()
+  @stdio.serve_stdio(agent)
+}</code></pre>
+
+        <p>
+          For a server, <code>to_asgi</code> hands back an application any ASGI runtime can run, and
+          the same agent code works: the transport is the only thing that changes.
+        </p>
+
+        <!-- nocheck -->
+        <pre><code>import {
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/asgi",
+}
+
+let app = @asgi.to_asgi(MyAgent::new())</code></pre>
+
+        <div class="note">
+          The remote transport is a request for discussion, not a finished specification. Its
+          revision of 2026-11-04 is what this library implements; the parts the schema has no room
+          for — the connection identifier in the <code>initialize</code> answer — travel in
+          <code>_meta</code> and in a response header, and are documented as such.
+        </div>
+
+        <h2 id="guide">Guide</h2>
+        <p>
+          An agent is a value with three required methods and a handful of optional ones. The
+          required three open a conversation, start a session, and run a turn; everything else has a
+          default that reports itself as unsupported, so an agent only advertises what it answers.
+        </p>
+
+        <!-- nocheck -->
+        <pre><code>impl @moonacp.Agent for MyAgent with fn initialize(self, request) {
+  ignore(self)
+  ignore(request)
+  {
+    ..@moonacp.Initialized::new(),
+    capabilities: {
+      ..@moonacp.AgentCapabilities::none(),
+      prompt: { image: true, audio: false, embedded_context: true, meta: None },
+    },
+    agent_info: Some(@moonacp.Implementation::new("my-agent", "0.1.0")),
+  }
+}
+
+impl @moonacp.Agent for MyAgent with fn prompt(self, request, session) {
+  let text = request.prompt.map(block => match block {
+    @moonacp.ContentBlock::Text(content) => content.text
+    _ => ""
+  }).join(" ")
+  session.update(@moonacp.SessionUpdate::AgentMessageChunk({
+    content: @moonacp.ContentBlock::Text({
+      text: "You said: " + text,
+      annotations: None,
+      meta: None,
+    }),
+    message_id: None,
+    meta: None,
+  }))
+  @moonacp.StopReason::EndTurn
+}</code></pre>
+
+        <p>
+          Inside a turn the <code>Session</code> is the way back to the editor: send an update, ask
+          the user to allow a tool call, read or write a file, open a terminal, put a form in front
+          of them. Each of those is a request the client answers, and a client that never advertised
+          the capability answers <code>-32601</code> — so check before asking.
+        </p>
+
+        <!-- nocheck -->
+        <pre><code>let outcome = session.request_permission({
+  tool_call: { tool_call_id: "c-1", title: "write /work/notes.md", … },
+  options: [
+    { option_id: "allow", name: "Allow", kind: @moonacp.PermissionOptionKind::AllowOnce, meta: None },
+    { option_id: "no", name: "No", kind: @moonacp.PermissionOptionKind::RejectOnce, meta: None },
+  ],
+  meta: None,
+})
+match outcome {
+  @moonacp.Outcome::Selected(option) => println("chose " + option)
+  @moonacp.Outcome::Cancelled => println("dismissed")
+}</code></pre>
+
+        <p>
+          The other side is a client: it answers what the agent asks and drives the session. Start
+          the agent as a child process, or connect to one over any transport you write yourself.
+        </p>
+
+        <!-- nocheck -->
+        <pre><code>let child = @stdio.spawn(my_client, ["/usr/local/bin/my-agent"])
+let conn = child.conn()
+@async.with_task_group(async fn(group) {
+  group.spawn_bg(async fn() { conn.run() })
+  let started = conn.initialize({
+    protocol_version: @moonacp.protocol_version,
+    client_capabilities: @moonacp.ClientCapabilities::none(),
+    client_info: None,
+    meta: None,
+  })
+  println("talking to " + started.agent_info.map(info => info.name).unwrap_or("an agent"))
+})</code></pre>
+
+        <h2 id="consistency">Consistency</h2>
+        <p>
+          The official conformance suite runs against the example agent on every push, as do both
+          official SDKs — theirs calling ours, and ours calling theirs. Every message either side
+          writes is checked against the published schema as it is written.
+        </p>
+
+        <table>
+          <thead>
+            <tr><th>Suite</th><th>Pinned at</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>acp-tck</code>, the official conformance suite</td>
+              <td>commit <code>b7f40fb</code>, v1 suite</td>
+              <td><span class="pass">conformant</span>: every mandatory requirement and every declared capability passes</td>
+            </tr>
+            <tr>
+              <td>The published <code>schema.json</code></td>
+              <td>v1.29.1</td>
+              <td><span class="pass">every message</span> in a scripted session, both directions</td>
+            </tr>
+            <tr>
+              <td>Official TypeScript client → this library's agent</td>
+              <td><code>@agentclientprotocol/sdk</code> 2.4.0</td>
+              <td><span class="pass">conversation, streamed answer, cancel</span></td>
+            </tr>
+            <tr>
+              <td>Official Python client → this library's agent</td>
+              <td><code>agent-client-protocol</code> 0.12.1</td>
+              <td><span class="pass">conversation, streamed answer, cancel</span></td>
+            </tr>
+            <tr>
+              <td>This library's client → official TypeScript agent</td>
+              <td><code>@agentclientprotocol/sdk</code> 2.4.0</td>
+              <td><span class="pass">conversation, streamed answer</span></td>
+            </tr>
+            <tr>
+              <td>This library's client → official Python agent</td>
+              <td><code>agent-client-protocol</code> 0.12.1</td>
+              <td><span class="pass">conversation, streamed answer</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note warn">
+          Two findings worth knowing. The suite's advisory requirement that an agent connect to the
+          MCP servers a client hands it is not met: this library carries those records and nothing
+          more, because speaking MCP is another library's job. And the transport's connection
+          identifier has no member in the schema, so it travels in <code>_meta</code> as well as the
+          header.
+        </div>
+
+        <footer class="page">
+          <span>Apache-2.0 · MoonBit · schema v1.29.1</span>
+          <a href="https://github.com/moonbitstack/moonacp">GitHub</a>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const mark = () => root.classList.toggle("at-top", scrollY === 0);
+      addEventListener("scroll", mark, { passive: true });
+      mark();
+
+      // The section you are reading is the one the sidebar shows.
+      const links = [...document.querySelectorAll(".side nav a[href^='#']")];
+      const sections = links
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            for (const link of links) {
+              link.toggleAttribute(
+                "aria-current",
+                link.getAttribute("href") === "#" + entry.target.id,
+              );
+            }
+          }
+        },
+        { rootMargin: "-20% 0px -70% 0px" },
+      );
+      for (const section of sections) observer.observe(section);
+    </script>
+  </body>
+</html>

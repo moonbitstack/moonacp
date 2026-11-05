@@ -15,6 +15,7 @@ pub(all) struct PromptCapabilities {
 pub extend PromptCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// Nothing supported: no images, no audio, no embedded context.
 pub fn PromptCapabilities::none() -> PromptCapabilities {
   { image: false, audio: false, embedded_context: false, meta: None, }
 }
@@ -70,6 +71,7 @@ pub(all) struct McpCapabilities {
 pub extend McpCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No MCP transport supported.
 pub fn McpCapabilities::none() -> McpCapabilities {
   { http: false, sse: false, meta: None, }
 }
@@ -115,6 +117,7 @@ pub(all) struct SessionCapabilities {
 pub extend SessionCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No session method beyond `session/new`.
 pub fn SessionCapabilities::none() -> SessionCapabilities {
   {
     list: false,
@@ -188,6 +191,7 @@ pub(all) struct AgentAuthCapabilities {
 pub extend AgentAuthCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No authentication step offered.
 pub fn AgentAuthCapabilities::none() -> AgentAuthCapabilities {
   { logout: false, meta: None, }
 }
@@ -228,6 +232,7 @@ pub(all) struct AgentCapabilities {
 pub extend AgentCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// An agent that supports only `session/new` and `session/prompt`.
 pub fn AgentCapabilities::none() -> AgentCapabilities {
   {
     load_session: false,
@@ -289,6 +294,7 @@ pub(all) struct FileSystemCapabilities {
 pub extend FileSystemCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No file access granted.
 pub fn FileSystemCapabilities::none() -> FileSystemCapabilities {
   { read_text_file: false, write_text_file: false, meta: None, }
 }
@@ -330,6 +336,7 @@ pub(all) struct ClientAuthCapabilities {
 pub extend ClientAuthCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No terminal authentication offered by the client.
 pub fn ClientAuthCapabilities::none() -> ClientAuthCapabilities {
   { terminal: false, meta: None, }
 }
@@ -372,6 +379,7 @@ pub(all) struct ClientSessionCapabilities {
 pub extend ClientSessionCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No supplementary session features.
 pub fn ClientSessionCapabilities::none() -> ClientSessionCapabilities {
   {
     compaction: false,
@@ -441,6 +449,7 @@ pub(all) struct ElicitationCapabilities {
 pub extend ElicitationCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// No elicitation kind supported.
 pub fn ElicitationCapabilities::none() -> ElicitationCapabilities {
   { form: false, url: false, meta: None, }
 }
@@ -489,6 +498,7 @@ pub(all) struct ClientCapabilities {
 pub extend ClientCapabilities with Eq::{equal, not_equal}
 
 ///|
+/// A client that reads and writes nothing, runs nothing, and answers no ask.
 pub fn ClientCapabilities::none() -> ClientCapabilities {
   {
     fs: FileSystemCapabilities::none(),
@@ -547,6 +557,7 @@ pub(all) struct Implementation {
 pub extend Implementation with Eq::{equal, not_equal}
 
 ///|
+/// A name and a version, which is all the protocol asks for.
 pub fn Implementation::new(name : String, version : String) -> Implementation {
   { name, version, title: None, meta: None, }
 }

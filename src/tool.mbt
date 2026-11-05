@@ -20,6 +20,7 @@ pub(all) enum ToolKind {
 pub extend ToolKind with Eq::{equal, not_equal}
 
 ///|
+/// The name the kind travels as.
 pub fn ToolKind::to_string(self : ToolKind) -> String {
   match self {
     Read => "read"
@@ -36,6 +37,7 @@ pub fn ToolKind::to_string(self : ToolKind) -> String {
 }
 
 ///|
+/// The kind with that name, or `None`.
 pub fn ToolKind::of(name : String) -> ToolKind? {
   match name {
     "read" => Some(Read)
@@ -85,6 +87,7 @@ pub(all) enum ToolCallStatus {
 pub extend ToolCallStatus with Eq::{equal, not_equal}
 
 ///|
+/// The name the status travels as.
 pub fn ToolCallStatus::to_string(self : ToolCallStatus) -> String {
   match self {
     Pending => "pending"
@@ -95,6 +98,7 @@ pub fn ToolCallStatus::to_string(self : ToolCallStatus) -> String {
 }
 
 ///|
+/// The status with that name, or `None`.
 pub fn ToolCallStatus::of(name : String) -> ToolCallStatus? {
   match name {
     "pending" => Some(Pending)
@@ -258,6 +262,7 @@ pub(all) enum PermissionOptionKind {
 pub extend PermissionOptionKind with Eq::{equal, not_equal}
 
 ///|
+/// The name the option kind travels as.
 pub fn PermissionOptionKind::to_string(self : PermissionOptionKind) -> String {
   match self {
     AllowOnce => "allow_once"
@@ -268,6 +273,7 @@ pub fn PermissionOptionKind::to_string(self : PermissionOptionKind) -> String {
 }
 
 ///|
+/// The option kind with that name, or `None`.
 pub fn PermissionOptionKind::of(name : String) -> PermissionOptionKind? {
   match name {
     "allow_once" => Some(AllowOnce)

@@ -34,16 +34,39 @@ pub async fn spawn(
   cwd? : StringView,
 ) -> Child {
   guard command.length() > 0 else { abort("spawn: no program given") }
+  // The first element is the program, the rest are its arguments unless the caller named them.
+  let rest = match args {
+    Some(args) => args
+    None => {
+      let out = []
+      for index in 1..<command.length() {
+        out.push(command[index])
+      }
+      out
+    }
+  }
   let (child_stdin, to_child) = @process.write_to_process()
   let (from_child, child_stdout) = @process.read_from_process()
-  let pid = @process.spawn_orphan(
-    command[0],
-    args.unwrap_or([]),
-    stdin=child_stdin,
-    stdout=child_stdout,
-    extra_env=env.unwrap_or(Map([])),
-    cwd=cwd.unwrap_or(""),
-  )
+  // `cwd` is only passed when the caller named one: an empty path is not a directory.
+  let pid = match cwd {
+    Some(cwd) =>
+      @process.spawn_orphan(
+        command[0],
+        rest,
+        stdin=child_stdin,
+        stdout=child_stdout,
+        extra_env=env.unwrap_or(Map([])),
+        cwd~,
+      )
+    None =>
+      @process.spawn_orphan(
+        command[0],
+        rest,
+        stdin=child_stdin,
+        stdout=child_stdout,
+        extra_env=env.unwrap_or(Map([])),
+      )
+  }
   let frames = @peer.lines(from_child, to_child)
   { conn: @moonacp.connect(client, frames), pid, to_child, }
 }

@@ -100,6 +100,7 @@ pub async fn Conn::notify(
 }
 
 ///|
+/// Negotiates the version and trades capabilities. Call it once, before anything else.
 pub async fn Conn::initialize(
   self : Conn,
   request : Initialize,
@@ -108,6 +109,7 @@ pub async fn Conn::initialize(
 }
 
 ///|
+/// Runs one of the agent's authentication methods.
 pub async fn Conn::authenticate(
   self : Conn,
   request : Authenticate,
@@ -116,11 +118,13 @@ pub async fn Conn::authenticate(
 }
 
 ///|
+/// Drops whatever `authenticate` established.
 pub async fn Conn::logout(self : Conn) -> Unit raise Refused {
   ignore(self.call("logout", json_of([])))
 }
 
 ///|
+/// Starts a session and returns what the agent says about it: identifier, modes, options.
 pub async fn Conn::new_session(
   self : Conn,
   request : NewSession,
@@ -129,6 +133,7 @@ pub async fn Conn::new_session(
 }
 
 ///|
+/// Reopens a session; the updates that replay its history arrive on `run`.
 pub async fn Conn::load_session(
   self : Conn,
   request : LoadSession,
@@ -137,6 +142,7 @@ pub async fn Conn::load_session(
 }
 
 ///|
+/// Reattaches to a live session without replaying anything.
 pub async fn Conn::resume_session(
   self : Conn,
   request : ResumeSession,
@@ -145,6 +151,7 @@ pub async fn Conn::resume_session(
 }
 
 ///|
+/// The sessions the agent remembers, one page at a time.
 pub async fn Conn::list_sessions(
   self : Conn,
   request : ListSessions,
@@ -153,6 +160,7 @@ pub async fn Conn::list_sessions(
 }
 
 ///|
+/// Forgets a session.
 pub async fn Conn::delete_session(
   self : Conn,
   request : DeleteSession,
@@ -161,6 +169,7 @@ pub async fn Conn::delete_session(
 }
 
 ///|
+/// Ends a running session, as if `session/cancel` had been sent.
 pub async fn Conn::close_session(
   self : Conn,
   request : CloseSession,
@@ -169,6 +178,7 @@ pub async fn Conn::close_session(
 }
 
 ///|
+/// Switches the session's mode.
 pub async fn Conn::set_mode(
   self : Conn,
   request : SetMode,
@@ -177,6 +187,7 @@ pub async fn Conn::set_mode(
 }
 
 ///|
+/// Sets one configuration option and returns the whole list, as the protocol requires.
 pub async fn Conn::set_config_option(
   self : Conn,
   request : SetConfigOption,

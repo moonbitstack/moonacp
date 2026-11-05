@@ -1,0 +1,13 @@
+// A client that launches an agent and runs one turn against it: `moon run src/examples/03-client
+// --target native -- <agent command> [args...]`. It is what the interop runs drive another
+// implementation with.
+supported_targets = "+native"
+
+import {
+  "moonbitlang/async",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/stdio",
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")

@@ -1,0 +1,251 @@
+#!/usr/bin/env python3
+"""Generate the API reference page from the sources and their doc comments.
+
+`pkg.generated.mbti` is the authority on what is public; the `///` comments beside each definition
+are the authority on what it means. This script reads both, and fails if a public item in the
+interfaces has no entry in the page, so nothing can quietly drop out of the reference.
+
+    python scripts/gen_api.py            # write docs/api.html
+    python scripts/gen_api.py --check    # fail if the file is not what the sources say
+"""
+
+from __future__ import annotations
+
+import html
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
+OUT = ROOT / "docs" / "api.html"
+
+PACKAGES = [
+    ("moonacp", "The protocol, its types, and the contracts on both sides.", SRC),
+    ("moonacp/stdio", "Serving an agent on the process's own streams.", SRC / "stdio"),
+    ("moonacp/asgi", "Serving an agent over HTTP streams and a WebSocket.", SRC / "asgi"),
+]
+
+PROMOTED = {
+    "equal",
+    "not_equal",
+    "to_json",
+    "from_json",
+    "to_repr",
+    "output",
+    "to_string",
+    "default",
+    "compare",
+    "hash",
+}
+
+GROUPS = [
+    ("Values", ("pub let", "pub fn")),
+    ("Errors", ("suberror",)),
+    ("Types and methods", ("struct", "enum", "type ")),
+    ("Traits", ("trait",)),
+]
+
+
+def source_items(directory: Path) -> list[dict]:
+    """Every documented public item in a package, in the order it is written."""
+    items: list[dict] = []
+    for path in sorted(directory.glob("*.mbt")):
+        if path.name.endswith(("_test.mbt", "_wbtest.mbt")):
+            continue
+        lines = path.read_text(encoding="utf-8").split("\n")
+        doc: list[str] = []
+        index = 0
+        while index < len(lines):
+            line = lines[index]
+            if line.startswith("///|"):
+                doc = []
+                index += 1
+                continue
+            if line.startswith("///"):
+                doc.append(line[3:].strip())
+                index += 1
+                continue
+            if line.startswith("#"):
+                # An attribute belongs to the declaration below it, and the docs to that.
+                index += 1
+                continue
+            if not re.match(r"pub[ (]", line) or re.match(r"pub (extend|impl)\b", line):
+                doc = []
+                index += 1
+                continue
+            # Collect the declaration, which may run over several lines up to its body.
+            declaration = [line]
+            while (
+                index + 1 < len(lines)
+                and lines[index + 1].strip()
+                and not re.match(r"(pub|///|#|\}|impl |priv )", lines[index + 1])
+                and not declaration[-1].rstrip().endswith(("{", "=", "__"))
+            ):
+                index += 1
+                declaration.append(lines[index])
+            text = " ".join(part.strip() for part in declaration)
+            text = re.sub(r"\s*\{\s*$", "", text).strip()
+            items.append({"text": text, "doc": "\n".join(doc), "file": path.name})
+            doc = []
+            index += 1
+    return items
+
+
+def mbti_names(directory: Path) -> set[str]:
+    """The names `pkg.generated.mbti` says are public."""
+    names: set[str] = set()
+    path = directory / "pkg.generated.mbti"
+    if not path.exists():
+        return names
+    # A name here is what a reader looks up: `Session::update`, or `Prompt` for a type.
+    pattern = re.compile(
+        r"^pub (?:async )?fn(?:\[[^\]]*\])?\s+([A-Za-z_][\w]*(?:::[A-Za-z_][\w]*)?)"
+        r"|^pub (?:async )?(?:let|const|trait)\s+([A-Za-z_][\w]*)"
+        r"|^pub (?:\w+\s+)?(?:struct|enum|suberror|type)\s+([A-Za-z_][\w]*)"
+    )
+    for line in path.read_text(encoding="utf-8").split("\n"):
+        match = pattern.match(line.replace("pub(all)", "pub"))
+        if not match:
+            continue
+        name = next(group for group in match.groups() if group)
+        # Methods a trait implementation promotes are documented on the trait, not here.
+        if name.rsplit("::", 1)[-1] in PROMOTED:
+            continue
+        names.add(name)
+    return names
+
+
+def item_names(items: list[dict]) -> set[str]:
+    names: set[str] = set()
+    for item in items:
+        text = item["text"].replace("pub(all)", "pub")
+        match = re.match(
+            r"pub (?:async )?fn(?:\[[^\]]*\])?\s+([A-Za-z_][\w]*(?:::[A-Za-z_][\w]*)?)", text
+        )
+        if not match:
+            match = re.match(
+                r"pub (?:\w+\s+)*(?:let|struct|enum|suberror|trait|type)\s+([A-Za-z_][\w]*)", text
+            )
+        if match:
+            names.add(match.group(1))
+    return names
+
+
+def kind_of(text: str) -> str:
+    if re.search(r"\btrait\b", text):
+        return "trait"
+    if re.search(r"\bsuberror\b", text):
+        return "error"
+    if re.search(r"\bstruct\b", text):
+        return "struct"
+    if re.search(r"\benum\b", text):
+        return "enum"
+    if re.search(r"\btype\b", text):
+        return "alias"
+    if re.search(r"\blet\b", text):
+        return "value"
+    return "function"
+
+
+KIND_LABEL = {
+    "trait": ("trait", "trait"),
+    "error": ("error", "error"),
+    "struct": ("type", "struct"),
+    "enum": ("type", "enum"),
+    "alias": ("type", "alias"),
+    "value": ("let", "value"),
+    "function": ("fn", "function"),
+}
+
+
+def render(api_doc: str) -> str:
+    """The whole page, with one section per package and one card per item."""
+    sections = []
+    for package, blurb, directory in PACKAGES:
+        items = source_items(directory)
+        groups: dict[str, list[dict]] = {name: [] for name, _ in GROUPS}
+        for item in items:
+            kind = kind_of(item["text"])
+            key = {
+                "trait": "Traits",
+                "error": "Errors",
+                "struct": "Types and methods",
+                "enum": "Types and methods",
+                "alias": "Types and methods",
+                "value": "Values",
+                "function": "Values",
+            }[kind]
+            groups[key].append(item)
+        body = []
+        for name, _ in GROUPS:
+            group = groups[name]
+            if not group:
+                continue
+            body.append(f'<h3 class="group">{name}</h3>')
+            for item in group:
+                kind = kind_of(item["text"])
+                label, css = KIND_LABEL[kind]
+                signature = html.escape(item["text"])
+                signature = re.sub(
+                    r"\b(pub|async)\b\s*", "", signature, count=0
+                ).strip()
+                doc = ""
+                if item["doc"]:
+                    paragraphs = [
+                        f"<p>{html.escape(paragraph)}</p>"
+                        for paragraph in item["doc"].split("\n\n")
+                        if paragraph.strip()
+                    ]
+                    doc = "\n".join(paragraphs)
+                anchor = f"{package.replace('/', '-')}-{len(body)}"
+                body.append(
+                    f'<article class="item" id="{html.escape(anchor)}">'
+                    f'<div class="signature"><span class="kind {css}">{label}</span>'
+                    f"<code>{signature}</code></div>"
+                    f'<div class="doc">{doc}</div></article>'
+                )
+        sections.append(
+            f'<section class="package" id="{html.escape(package.replace("/", "-"))}">'
+            f'<h2><code>{html.escape(package)}</code></h2><p class="blurb">{html.escape(blurb)}</p>'
+            + "\n".join(body)
+            + "</section>"
+        )
+    nav = "\n".join(
+        f'<a href="#{html.escape(package.replace("/", "-"))}"><code>{html.escape(package)}</code></a>'
+        for package, _, _ in PACKAGES
+    )
+    return api_doc.replace("<!-- packages -->", nav).replace("<!-- sections -->", "\n".join(sections))
+
+
+def main(argv: list[str]) -> int:
+    expected = set()
+    for _, _, directory in PACKAGES:
+        expected |= mbti_names(directory)
+    documented = set()
+    for _, _, directory in PACKAGES:
+        documented |= item_names(source_items(directory))
+    missing = sorted(expected - documented)
+    if missing:
+        print("these public items have no entry in the reference:")
+        for name in missing:
+            print(f"  {name}")
+        return 1
+    page = render(API_TEMPLATE)
+    if "--check" in argv:
+        current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
+        if current != page:
+            print("docs/api.html is not what the sources say; run scripts/gen_api.py")
+            return 1
+        print(f"{len(documented)} public items, page is current")
+        return 0
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(page, encoding="utf-8", newline="\n")
+    print(f"{len(documented)} public items written to {OUT.relative_to(ROOT)}")
+    return 0
+
+
+API_TEMPLATE = (ROOT / "scripts" / "api-template.html").read_text(encoding="utf-8")
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

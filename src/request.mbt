@@ -651,6 +651,7 @@ pub(all) enum StopReason {
 pub extend StopReason with Eq::{equal, not_equal}
 
 ///|
+/// The name the reason travels as.
 pub fn StopReason::to_string(self : StopReason) -> String {
   match self {
     EndTurn => "end_turn"
@@ -662,6 +663,7 @@ pub fn StopReason::to_string(self : StopReason) -> String {
 }
 
 ///|
+/// The reason with that name, or `None`.
 pub fn StopReason::of(name : String) -> StopReason? {
   match name {
     "end_turn" => Some(EndTurn)

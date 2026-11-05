@@ -1,0 +1,592 @@
+/* The look of the documentation: a ReDoc-shaped reference, with the greens FastAPI made familiar and
+   a paper-quiet surface around them. Two themes, one set of tokens. */
+
+:root {
+  --ink: #1f2933;
+  --ink-soft: #52606d;
+  --ink-faint: #7b8794;
+  --paper: #ffffff;
+  --paper-sunk: #f8f9fb;
+  --paper-raised: #ffffff;
+  --line: #e4e8ee;
+  --line-strong: #cfd6e0;
+  --accent: #009688;
+  --accent-soft: #e6f5f3;
+  --accent-ink: #00695f;
+  --warn: #b45309;
+  --code-bg: #f6f8fa;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 8px 24px rgb(16 24 40 / 6%);
+  --sans: "Inter", "Segoe UI", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, monospace;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e6edf3;
+    --ink-soft: #a7b6c2;
+    --ink-faint: #7d8b98;
+    --paper: #0d1117;
+    --paper-sunk: #11161d;
+    --paper-raised: #161c24;
+    --line: #232a34;
+    --line-strong: #303a46;
+    --accent: #2dd4bf;
+    --accent-soft: #10312d;
+    --accent-ink: #7ff0e0;
+    --warn: #f0b429;
+    --code-bg: #121820;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 12px 32px rgb(0 0 0 / 32%);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.65 var(--sans);
+  font-variant-ligatures: no-contextual;
+}
+
+button,
+input,
+textarea,
+select {
+  font-variant-ligatures: no-contextual;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--mono);
+  font-size: 0.875em;
+  font-variant-ligatures: no-contextual;
+}
+
+a {
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Scrollbars: never the browser's. The page thumb hides at the top and shows once you move, and the
+   gutter is always reserved so nothing jumps. */
+@supports selector(::-webkit-scrollbar) {
+  html::-webkit-scrollbar,
+  .scroll::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  html::-webkit-scrollbar-track,
+  .scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html::-webkit-scrollbar-thumb,
+  .scroll::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 99px;
+    background-color: color-mix(in srgb, var(--ink) 22%, transparent);
+    background-clip: content-box;
+  }
+
+  html.at-top::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
+
+  .scroll:hover::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--ink) 38%, transparent);
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--ink) 26%, transparent) transparent;
+  }
+
+  html.at-top {
+    scrollbar-color: transparent transparent;
+  }
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 264px) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* The sidebar: quiet, sticky, and never wider than a column of links. */
+.side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--paper-sunk);
+  padding: 28px 22px 40px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.brand svg {
+  flex: none;
+}
+
+.brand span small {
+  display: block;
+  font-weight: 450;
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0;
+}
+
+.side nav {
+  display: grid;
+  gap: 2px;
+  margin-top: 22px;
+}
+
+.side nav p {
+  margin: 18px 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.side nav a {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.side nav a:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.side nav a[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 550;
+}
+
+.side footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+main {
+  min-width: 0;
+  padding: 48px clamp(20px, 5vw, 72px) 96px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+}
+
+h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.12;
+  letter-spacing: -0.028em;
+  margin: 18px 0 14px;
+  font-weight: 680;
+}
+
+h1 .thin {
+  color: var(--ink-faint);
+  font-weight: 480;
+}
+
+.lede {
+  max-width: 62ch;
+  font-size: 17px;
+  color: var(--ink-soft);
+  margin: 0 0 26px;
+}
+
+h2 {
+  font-size: 23px;
+  letter-spacing: -0.018em;
+  margin: 56px 0 8px;
+  font-weight: 640;
+  scroll-margin-top: 24px;
+}
+
+h2 code {
+  font-size: 0.86em;
+}
+
+h3 {
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  margin: 34px 0 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+h3.group {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+
+p {
+  margin: 0 0 14px;
+}
+
+.blurb {
+  color: var(--ink-soft);
+  max-width: 68ch;
+}
+
+/* Code: a slab that scrolls on its own, with a hairline and no chrome. */
+pre {
+  margin: 14px 0 18px;
+  padding: 16px 18px;
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: auto;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+pre code {
+  font-size: 13px;
+  white-space: pre;
+}
+
+:not(pre) > code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper-sunk);
+  overflow-wrap: anywhere;
+}
+
+/* Cards: the feature grid, and the reference entries, share one surface. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 232px), 1fr));
+  gap: 14px;
+  margin: 18px 0 10px;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 18px 16px;
+  background: var(--paper-raised);
+  box-shadow: var(--shadow);
+}
+
+.card h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 620;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.card svg {
+  flex: none;
+  color: var(--accent);
+}
+
+/* The reference: one entry per public item, signature first. */
+.item {
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.signature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.signature code {
+  font-size: 13.5px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.kind {
+  flex: none;
+  margin-top: 2px;
+  padding: 1px 7px;
+  border-radius: 5px;
+  font: 600 10.5px/1.7 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+}
+
+.kind.struct,
+.kind.enum {
+  background: #5b7cfa;
+}
+
+.kind.trait {
+  background: #8b5cf6;
+}
+
+.kind.error {
+  background: #e0537a;
+}
+
+.kind.value {
+  background: #0ea5e9;
+}
+
+.kind.alias {
+  background: #64748b;
+}
+
+.doc {
+  padding-left: 2px;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  max-width: 74ch;
+}
+
+.doc p {
+  margin: 0 0 8px;
+}
+
+.doc p:last-child {
+  margin-bottom: 0;
+}
+
+/* A transcript, for a library whose product is a conversation. */
+.transcript {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper-raised);
+  box-shadow: var(--shadow);
+  margin: 18px 0 8px;
+}
+
+.transcript header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-sunk);
+  font: 500 12px/1.4 var(--mono);
+  color: var(--ink-faint);
+}
+
+.transcript .body {
+  padding: 12px 0;
+  font: 12.5px/1.75 var(--mono);
+  max-height: 320px;
+  overflow: auto;
+}
+
+.transcript .line {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+  padding: 2px 14px;
+}
+
+.transcript .line:hover {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.transcript .who {
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+.transcript .line.agent .who {
+  color: var(--accent-ink);
+}
+
+.transcript .what {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink-soft);
+}
+
+.transcript .line.agent .what {
+  color: var(--ink);
+}
+
+/* Tables: the consistency findings, and anything else that is a grid of facts. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 9px 12px 9px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+td code {
+  white-space: nowrap;
+}
+
+.pass {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.note {
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--accent-soft);
+  padding: 12px 16px;
+  margin: 18px 0;
+  color: var(--accent-ink);
+  font-size: 14.5px;
+}
+
+.note.warn {
+  border-left-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  color: var(--ink);
+}
+
+footer.page {
+  margin-top: 64px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+/* Narrow screens: the sidebar becomes a strip of links above the content, nothing scrolls
+   sideways, and long identifiers break instead of pushing the page wide. */
+@media (width <= 860px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 18px 18px 14px;
+  }
+
+  .side nav {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .side nav p,
+  .side footer {
+    display: none;
+  }
+
+  main {
+    padding: 28px 18px 72px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  .transcript .line {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .transcript .who {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

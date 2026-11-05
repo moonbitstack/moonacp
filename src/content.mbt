@@ -12,6 +12,7 @@ pub(all) enum Role {
 pub extend Role with Eq::{equal, not_equal}
 
 ///|
+/// The name the role travels as.
 pub fn Role::to_string(self : Role) -> String {
   match self {
     Assistant => "assistant"
@@ -20,6 +21,7 @@ pub fn Role::to_string(self : Role) -> String {
 }
 
 ///|
+/// The role with that name, or `None`.
 pub fn Role::of(name : String) -> Role? {
   match name {
     "assistant" => Some(Assistant)
@@ -546,6 +548,7 @@ pub(all) struct TerminalRef {
 pub extend TerminalRef with Eq::{equal, not_equal}
 
 ///|
+/// A reference to a terminal, as a tool call embeds it.
 pub fn TerminalRef::new(terminal_id : String) -> TerminalRef {
   { terminal_id, meta: None, }
 }

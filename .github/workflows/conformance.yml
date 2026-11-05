@@ -1,0 +1,84 @@
+name: Conformance
+
+# The official test suite, both official SDKs in both directions, and every message checked against
+# the published schema. All three pin a version, so a green run means the same thing tomorrow.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  conformance:
+    permissions:
+      contents: read
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: install python and node
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: post install
+        run: |
+          moon version --all
+          moon update
+
+      - name: build the agent under test
+        run: |
+          moon build --target native src/examples/02-notes-agent
+          echo "AGENT=$PWD/_build/native/debug/build/examples/02-notes-agent/02-notes-agent.exe" >> $GITHUB_ENV
+
+      - name: the official test suite
+        run: |
+          git clone --filter=blob:none https://github.com/agentclientprotocol/acp-tck.git /tmp/acp-tck
+          git -C /tmp/acp-tck checkout b7f40fb3c003c45926547be5a1f7e2b374035815
+          python -m pip install uv
+          uv run --project /tmp/acp-tck acp-tck \
+            --agent-cwd "$GITHUB_WORKSPACE" \
+            --timeout 30 --test-timeout 120 \
+            --report-json "$GITHUB_WORKSPACE/acp-tck-report.json" \
+            -- "$AGENT"
+
+      - name: every message against the published schema
+        run: |
+          python -m pip install jsonschema==4.23.0
+          python scripts/conformance/check_messages.py -- "$AGENT"
+
+      - name: the official TypeScript client
+        run: |
+          npm install --prefix scripts/interop
+          cd scripts/interop && node ts-client.mjs -- "$AGENT"
+
+      - name: the official Python client
+        run: |
+          python -m pip install -r scripts/interop/requirements.txt
+          python scripts/interop/py-client.py -- "$AGENT"
+
+      - name: our client against the official TypeScript agent
+        run: |
+          moon build --target native src/examples/03-client
+          ./_build/native/debug/build/examples/03-client/03-client.exe \
+            node scripts/interop/ts-agent.mjs | tee client-report.txt
+          grep -q "stop: end_turn" client-report.txt
+          grep -q "answer: ts echo: hello from a MoonBit client" client-report.txt
+
+      - name: our client against the official Python agent
+        run: |
+          ./_build/native/debug/build/examples/03-client/03-client.exe \
+            python scripts/interop/py-agent.py | tee python-report.txt
+          grep -q "stop: end_turn" python-report.txt
+          grep -q "answer: python echo: hello from a MoonBit client" python-report.txt
