@@ -1,0 +1,13 @@
+// A complete agent: sessions that outlive the connection, streaming answers, modes and
+// configuration, and the whole of `session/*`. Run it with
+// `moon run src/examples/02-notes-agent --target native` and drive it with any ACP client,
+// including the official conformance suite.
+supported_targets = "+native"
+
+import {
+  "moonbitlang/async",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/stdio",
+}
+
+pkgtype(kind: "executable")
