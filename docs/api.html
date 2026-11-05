@@ -283,8 +283,10 @@ on stdout, diagnostics on stderr.</p></div></article>
 <article class="item" id="moonacp-stdio-2"><div class="signature"><span class="kind function">fn</span><code>fn spawn( client : &amp;@moonacp.Client, command : Array[String], args? : Array[String], env? : Map[String, String], cwd? : StringView, ) -&gt; Child</code></div><div class="doc"><p>Starts `command` with `args` and connects to it as a client. The command is an absolute path or
 something the system can find on `PATH`; the first array element is the program.</p></div></article>
 <article class="item" id="moonacp-stdio-3"><div class="signature"><span class="kind function">fn</span><code>fn Child::conn(self : Child) -&gt; @moonacp.Conn</code></div><div class="doc"><p>The connection to the child, runnable and callable.</p></div></article>
+<article class="item" id="moonacp-stdio-4"><div class="signature"><span class="kind function">fn</span><code>fn Child::close(self : Child) -&gt; Unit</code></div><div class="doc"><p>Closes the child&#x27;s input, which is how an agent learns the client is done: it finishes what it
+is doing and exits. The read side ends with it, so a task blocked on `run` comes back.</p></div></article>
 <h3 class="group">Types and methods</h3>
-<article class="item" id="moonacp-stdio-5"><div class="signature"><span class="kind struct">type</span><code>struct Child</code></div><div class="doc"><p>A child process speaking the protocol on its pipes.</p></div></article></section>
+<article class="item" id="moonacp-stdio-6"><div class="signature"><span class="kind struct">type</span><code>struct Child</code></div><div class="doc"><p>A child process speaking the protocol on its pipes.</p></div></article></section>
 <section class="package" id="moonacp-asgi"><h2><code>moonacp/asgi</code></h2><p class="blurb">Serving an agent over HTTP streams and a WebSocket.</p><h3 class="group">Values</h3>
 <article class="item" id="moonacp-asgi-1"><div class="signature"><span class="kind function">fn</span><code>fn to_asgi( agent : &amp;@moonacp.Agent, path~ : String = &quot;/acp&quot;, hosts? : Array[String], limits~ : Limits = limits, ) -&gt; @moonasgi.AsgiApp</code></div><div class="doc"><p>Serves an agent over ASGI: one path, four verbs, and a WebSocket upgrade. Nothing is global, so
 several agents can be mounted side by side.</p></div></article>
