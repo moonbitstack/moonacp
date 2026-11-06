@@ -186,7 +186,7 @@ KIND_LABEL = {
 def render(api_doc: str) -> str:
     """The whole page, with one section per package and one card per item."""
     sections = []
-    outline: list[tuple[str, str, list[tuple[str, str]]]] = []
+    outline: list[tuple[str, str, list[tuple[str, str, int]]]] = []
     for package, blurb, directory in PACKAGES:
         items = source_items(directory)
         groups: dict[str, list[dict]] = {name: [] for name, _ in GROUPS}
@@ -207,7 +207,11 @@ def render(api_doc: str) -> str:
             group = groups[name]
             if not group:
                 continue
-            body.append(f'<h3 class="group" id="{package.replace("/", "-")}-{slug(name)}">{name}</h3>')
+            body.append(
+                f'<h3 class="group" id="{package.replace("/", "-")}-{slug(name)}">'
+                f'<span class="label">{name}</span><span class="rule"></span>'
+                f'<span class="count">{len(group)}</span></h3>'
+            )
             for item in group:
                 kind = kind_of(item["text"])
                 label, css = KIND_LABEL[kind]
@@ -222,7 +226,15 @@ def render(api_doc: str) -> str:
                     ]
                     doc = "\n".join(paragraphs)
                 anchor = f"{package.replace('/', '-')}-{len(body)}"
-                rest = f'<code class="tail">{html.escape(tail)}</code>' if tail else ""
+                if " -> " in tail:
+                    takes, gives = tail.split(" -> ", 1)
+                    inner = (
+                        f'<code>{html.escape(takes)} -&gt; </code>'
+                        f'<code class="ret">{html.escape(gives)}</code>'
+                    )
+                else:
+                    inner = f"<code>{html.escape(tail)}</code>"
+                rest = f'<div class="sig">{inner}</div>' if tail else ""
                 body.append(
                     f'<article class="item" id="{html.escape(anchor)}">'
                     f'<div class="entry-name"><span class="kind {css}">{label}</span>'
@@ -234,12 +246,14 @@ def render(api_doc: str) -> str:
             (
                 package.replace("/", "-"),
                 package,
-                [(slug(name), name) for name, _ in GROUPS if groups[name]],
+                [(slug(name), name, len(groups[name])) for name, _ in GROUPS if groups[name]],
             )
         )
         sections.append(
             f'<section class="package" id="{html.escape(package.replace("/", "-"))}">'
-            f'<h2><code>{html.escape(package)}</code></h2><p class="blurb">{html.escape(blurb)}</p>'
+            f'<h2><code>{html.escape(package)}</code>'
+            f'<span class="count">{len(items)} items</span></h2>'
+            f'<p class="blurb">{html.escape(blurb)}</p>'
             + "\n".join(body)
             + "</section>"
         )
@@ -250,8 +264,8 @@ def render(api_doc: str) -> str:
     contents = "\n".join(
         f'<a href="#{anchor}"><code>{html.escape(package)}</code></a>'
         + "".join(
-            f'<a class="sub" href="#{anchor}-{group}">{html.escape(name)}</a>'
-            for group, name in groups
+            f'<a class="sub" href="#{anchor}-{group}">{html.escape(name)}<em>{count}</em></a>'
+            for group, name, count in groups
         )
         for anchor, package, groups in outline
     )

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>moonacp — the Agent Client Protocol for MoonBit</title>
+    <title>MoonACP — the Agent Client Protocol for MoonBit</title>
     <meta
       name="description"
       content="Editors calling agents: sessions, streamed answers, permissions, file access and terminals, over stdio or one HTTP endpoint."
@@ -23,7 +23,7 @@
     <div class="shell">
       <aside class="side">
         <div class="brand">
-          <span>moonacp<small>Agent Client Protocol</small></span>
+          <span>MoonACP<small>Agent Client Protocol</small></span>
           <button
             class="theme-toggle"
             type="button"
@@ -280,30 +280,50 @@ let conn = child.conn()
       </main>
 
       <aside class="rail wire" aria-label="The wire, and what is on this page">
-        <div>
-          <h4>The wire</h4>
-          <p>One turn, one message to a line: what the editor and the agent actually exchange.</p>
-          <div class="transcript">
-            <header><span class="verb">stdio</span>a real session, one message to a line</header>
-            <div class="body">
-              <div class="line"><span class="who">editor</span><span class="what">{"id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{}}}</span></div>
-              <div class="line agent"><span class="who">agent</span><span class="what">{"id":1,"result":{"protocolVersion":1,"agentCapabilities":{"loadSession":true,…}}}</span></div>
-              <div class="line"><span class="who">editor</span><span class="what">{"id":2,"method":"session/new","params":{"cwd":"/work","mcpServers":[]}}</span></div>
-              <div class="line agent"><span class="who">agent</span><span class="what">{"id":2,"result":{"sessionId":"notes-1","modes":{…},"configOptions":[…]}}</span></div>
-              <div class="line"><span class="who">editor</span><span class="what">{"id":3,"method":"session/prompt","params":{"sessionId":"notes-1","prompt":[{"type":"text","text":"hello"}]}}</span></div>
-              <div class="line agent"><span class="who">agent</span><span class="what">{"method":"session/update","params":{"sessionId":"notes-1","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"You said: hello"}}}}</span></div>
-              <div class="line"><span class="who">editor</span><span class="what">{"method":"session/cancel","params":{"sessionId":"notes-1"}}</span></div>
-              <div class="line agent"><span class="who">agent</span><span class="what">{"id":3,"result":{"stopReason":"cancelled"}}</span></div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="tabs" role="tablist" aria-label="Transport">
+              <button type="button" role="tab" id="tab-stdio" aria-controls="view-stdio" aria-selected="true" data-view="stdio">stdio</button>
+              <button type="button" role="tab" id="tab-http" aria-controls="view-http" aria-selected="false" data-view="http">http</button>
+            </div>
+            <button type="button" class="copy">Copy</button>
+          </div>
+          <div class="view" id="view-stdio" role="tabpanel" aria-labelledby="tab-stdio" data-view="stdio">
+            <div class="transcript">
+              <div class="body">
+                <div class="line"><span class="who">editor</span><span class="what">{&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{&quot;protocolVersion&quot;:1,&quot;clientCapabilities&quot;:{}}}</span></div>
+                <div class="line agent"><span class="who">agent</span><span class="what">{&quot;id&quot;:1,&quot;result&quot;:{&quot;protocolVersion&quot;:1,&quot;agentCapabilities&quot;:{&quot;loadSession&quot;:true,&hellip;}}}</span></div>
+                <div class="line"><span class="who">editor</span><span class="what">{&quot;id&quot;:2,&quot;method&quot;:&quot;session/new&quot;,&quot;params&quot;:{&quot;cwd&quot;:&quot;/work&quot;,&quot;mcpServers&quot;:[]}}</span></div>
+                <div class="line agent"><span class="who">agent</span><span class="what">{&quot;id&quot;:2,&quot;result&quot;:{&quot;sessionId&quot;:&quot;notes-1&quot;,&quot;modes&quot;:{&hellip;},&quot;configOptions&quot;:[&hellip;]}}</span></div>
+                <div class="line"><span class="who">editor</span><span class="what">{&quot;id&quot;:3,&quot;method&quot;:&quot;session/prompt&quot;,&quot;params&quot;:{&quot;sessionId&quot;:&quot;notes-1&quot;,&quot;prompt&quot;:[{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;hello&quot;}]}}</span></div>
+                <div class="line agent"><span class="who">agent</span><span class="what">{&quot;method&quot;:&quot;session/update&quot;,&quot;params&quot;:{&quot;sessionId&quot;:&quot;notes-1&quot;,&quot;update&quot;:{&quot;sessionUpdate&quot;:&quot;agent_message_chunk&quot;,&quot;content&quot;:{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;You said: hello&quot;}}}}</span></div>
+                <div class="line"><span class="who">editor</span><span class="what">{&quot;method&quot;:&quot;session/cancel&quot;,&quot;params&quot;:{&quot;sessionId&quot;:&quot;notes-1&quot;}}</span></div>
+                <div class="line agent"><span class="who">agent</span><span class="what">{&quot;id&quot;:3,&quot;result&quot;:{&quot;stopReason&quot;:&quot;cancelled&quot;}}</span></div>
+              </div>
             </div>
           </div>
+          <div class="view" id="view-http" role="tabpanel" aria-labelledby="tab-http" data-view="http" hidden>
+            <pre class="sample"><code><span class="m">POST</span> /acp HTTP/1.1
+Acp-Connection-Id: 7f31c2
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":3,"method":"session/prompt",
+ "params":{"sessionId":"notes-1",
+           "prompt":[{"type":"text","text":"hello"}]}}
+
+HTTP/1.1 202 Accepted
+
+data: {"jsonrpc":"2.0","method":"session/update", &hellip;}
+data: {"jsonrpc":"2.0","id":3,"result":{"stopReason":"end_turn"}}</code></pre>
+          </div>
         </div>
-        <div>
+        <div class="aside-facts">
           <h4>At a glance</h4>
           <dl class="facts">
             <div><dt>Schema</dt><dd>v1.29.1</dd></div>
             <div><dt>Transports</dt><dd>stdio · ASGI</dd></div>
-            <div><dt>Packages</dt><dd>moonacp, /stdio, /asgi</dd></div>
-            <div><dt>Sides</dt><dd>agent and client</dd></div>
+            <div><dt>Packages</dt><dd>3</dd></div>
+            <div><dt>Public items</dt><dd>209</dd></div>
           </dl>
         </div>
       </aside>
@@ -351,6 +371,72 @@ let conn = child.conn()
         if (!read()) paint();
       });
       paint();
+
+      // The wire, told apart: keys, strings, numbers, literals. The panel is a sample, and a sample
+      // that is one colour of grey is a sample nobody reads.
+      const token = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?)|\b(true|false|null)\b/g;
+      const colour = (node) => {
+        const text = node.textContent;
+        node.textContent = "";
+        let at = 0;
+        for (const match of text.matchAll(token)) {
+          if (match.index > at) node.append(text.slice(at, match.index));
+          const span = document.createElement("span");
+          if (match[1] && match[2] !== undefined) {
+            span.className = "k";
+            span.textContent = match[1];
+            node.append(span, match[2]);
+          } else if (match[1]) {
+            span.className = "s";
+            span.textContent = match[1];
+            node.append(span);
+          } else if (match[3]) {
+            span.className = "n";
+            span.textContent = match[3];
+            node.append(span);
+          } else {
+            span.className = "b";
+            span.textContent = match[0];
+            node.append(span);
+          }
+          at = match.index + match[0].length;
+        }
+        node.append(text.slice(at));
+      };
+      for (const node of document.querySelectorAll(".rail.wire .what, .rail.wire .sample code")) {
+        colour(node);
+      }
+
+      // Two transports, one panel: the same turn over a pipe and over HTTP.
+      const tabs = [...document.querySelectorAll(".rail .tabs button")];
+      const views = [...document.querySelectorAll(".rail .view")];
+      for (const tab of tabs) {
+        tab.addEventListener("click", () => {
+          for (const other of tabs) {
+            other.setAttribute("aria-selected", String(other === tab));
+          }
+          for (const view of views) {
+            view.hidden = view.dataset.view !== tab.dataset.view;
+          }
+        });
+      }
+
+      // Copy what is on show, and say so, so the button never lies about what it did.
+      const copy = document.querySelector(".rail .copy");
+      if (copy) {
+        copy.addEventListener("click", async () => {
+          const shown = document.querySelector(".rail .view:not([hidden])");
+          try {
+            await navigator.clipboard.writeText(shown.innerText);
+            copy.textContent = "Copied";
+          } catch (error) {
+            copy.textContent = "Select it";
+          }
+          setTimeout(() => {
+            copy.textContent = "Copy";
+          }, 1400);
+        });
+      }
 
       // The section you are reading is the one the sidebar shows.
       const links = [...document.querySelectorAll(".side nav a[href^='#']")];
