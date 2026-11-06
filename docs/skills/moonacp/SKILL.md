@@ -111,3 +111,6 @@ let outcome = session.request_permission({
 - Wire names are the schema's; the MoonBit names are snake case of the same thing
   (`loadSession` is `load_session`).
 - `_meta` on every message is the only place for extensions. Do not add root-level fields.
+- The MCP servers a client names in `session/new` are records here; launching and speaking to them
+  is MCP, and the example (`src/examples/02-notes-agent/mcp.mbt`) shows the shape: spawn, hand-shake,
+  `tools/list`.

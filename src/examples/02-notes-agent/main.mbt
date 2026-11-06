@@ -9,6 +9,8 @@ struct Note {
   mut mode : String
   mut model : String
   turns : Array[Turn]
+  /// The MCP servers the client asked for at `session/new`, already hand-shaken.
+  servers : Array[McpClient]
 }
 
 ///|
@@ -198,12 +200,24 @@ impl @moonacp.Agent for Notes with fn authenticate(self, request) {
 impl @moonacp.Agent for Notes with fn new_session(self, request) {
   self.next = self.next + 1
   let id = "notes-\{self.next}"
+  // The client named the servers it wants; this agent launches the stdio ones, which is the only
+  // transport it advertised.
+  let servers : Array[McpClient] = []
+  for server in request.mcp_servers {
+    if server is @moonacp.Stdio(stdio) {
+      match McpClient::connect(stdio) {
+        Some(client) => servers.push(client)
+        None => ()
+      }
+    }
+  }
   let note = Note::{
     cwd: request.cwd,
     title: "Session \{self.next}",
     mode: "ask",
     model: "fast",
     turns: [],
+    servers,
   }
   self.notes[id] = note
   self.started(note, id)
@@ -277,13 +291,26 @@ impl @moonacp.Agent for Notes with fn list_sessions(self, request) {
 
 ///|
 impl @moonacp.Agent for Notes with fn delete_session(self, request) {
-  self.notes.remove(request.session_id)
+  match self.notes.get(request.session_id) {
+    Some(note) => {
+      for server in note.servers {
+        server.close()
+      }
+      self.notes.remove(request.session_id)
+    }
+    None => ()
+  }
 }
 
 ///|
 impl @moonacp.Agent for Notes with fn close_session(self, request) {
-  ignore(self)
-  ignore(request)
+  match self.notes.get(request.session_id) {
+    Some(note) =>
+      for server in note.servers {
+        server.close()
+      }
+    None => ()
+  }
 }
 
 ///|
@@ -359,7 +386,7 @@ impl @moonacp.Agent for Notes with fn prompt(self, request, session) {
       break
     }
   }
-  let answer = answer_to(request.prompt, note.mode)
+  let answer = answer_to(request.prompt, note.mode) + tools_line(note.servers)
   // Two chunks, with a pause between them: an editor gets to show the answer growing, and a
   // `session/cancel` has somewhere to land.
   let cut = answer.length() / 2

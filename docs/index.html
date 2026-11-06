@@ -259,15 +259,20 @@ let conn = child.conn()
               <td><code>agent-client-protocol</code> 0.12.1</td>
               <td><span class="pass">conversation, streamed answer</span></td>
             </tr>
+            <tr>
+              <td>MCP server handed to <code>session/new</code></td>
+              <td><code>acp-tck</code>'s stdio stub</td>
+              <td><span class="pass">spawned, hand-shaken, tools asked for</span></td>
+            </tr>
           </tbody>
         </table>
 
-        <div class="note warn">
-          Two findings worth knowing. The suite's advisory requirement that an agent connect to the
-          MCP servers a client hands it is not met: this library carries those records and nothing
-          more, because speaking MCP is another library's job. And the transport's connection
-          identifier has no member in the schema, so it travels in <code>_meta</code> as well as the
-          header.
+        <div class="note">
+          Speaking MCP is the agent's job and not the protocol's, so the library carries the servers'
+          records and the example does the connecting: it spawns each stdio server a client names,
+          completes the handshake, and asks what tools it offers. One thing the schema does not
+          model: the remote transport's connection identifier, which travels in <code>_meta</code>
+          as well as in the <code>Acp-Connection-Id</code> header.
         </div>
 
         <footer class="page">

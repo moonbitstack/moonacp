@@ -6,8 +6,11 @@ supported_targets = "+native"
 
 import {
   "moonbitlang/async",
+  "moonbitlang/async/process",
+  "moonbitlang/core/json",
   "moonbitstack/moonacp",
   "moonbitstack/moonacp/stdio",
+  "moonbitstack/moonjrpc/peer",
 }
 
 pkgtype(kind: "executable")

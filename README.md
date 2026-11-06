@@ -150,13 +150,22 @@ The wire types are the schema's own: `ContentBlock`, `SessionUpdate` with its fo
 `ToolCall`, `StopReason`, `AgentCapabilities`, `ClientCapabilities`, the MCP server records, the
 elicitation forms, and one type per method for its parameters and its answer.
 
+## MCP servers
+
+A client names the MCP servers it wants in `session/new`; launching them and talking to them is the
+agent's job, and it is written where that job lives — in the example. `mcp.mbt` there spawns each
+stdio server, completes the MCP handshake, asks what tools it offers, and closes its input when the
+session ends. The library itself carries the servers' records and nothing more, because speaking
+MCP is a protocol of its own.
+
 ## Consistency
 
 The official conformance suite runs against the example agent on every push, and both official
-SDKs are driven in both directions. Two things do not pass, and are listed rather than hidden:
+SDKs are driven in both directions. The suite's verdict is `CONFORMANT`, with every mandatory
+requirement and every capability the example advertises passing — including its advisory check that
+the agent connects to the MCP server a session is given. One gap remains, and it is listed rather
+than hidden:
 
-- The suite's advisory requirement that an agent connect to the MCP servers a client names is not
-  met. This library carries those records; connecting to them belongs to a library that speaks MCP.
 - The remote transport has not been driven by the official Rust SDK's HTTP client, which the Rust
   SDK does not publish yet.
 
