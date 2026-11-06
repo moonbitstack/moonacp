@@ -8,20 +8,23 @@
 :root {
   color-scheme: light dark;
 
-  --ink: light-dark(#1f2933, #e6edf3);
-  --ink-soft: light-dark(#52606d, #a7b6c2);
-  --ink-faint: light-dark(#7b8794, #7d8b98);
-  --paper: light-dark(#ffffff, #0d1117);
-  --paper-sunk: light-dark(#f8f9fb, #11161d);
-  --paper-raised: light-dark(#ffffff, #161c24);
-  --line: light-dark(#e4e8ee, #232a34);
-  --line-strong: light-dark(#cfd6e0, #303a46);
-  --accent: light-dark(#009688, #2dd4bf);
-  --accent-soft: light-dark(#e6f5f3, #10312d);
-  --accent-ink: light-dark(#00695f, #7ff0e0);
+  --ink: light-dark(#1a222b, #e7edf2);
+  --ink-soft: light-dark(#4d5a66, #a3b2bf);
+  --ink-faint: light-dark(#798692, #7b8a97);
+  --paper: light-dark(#fdfcfa, #0b1014);
+  --paper-sunk: light-dark(#f6f5f1, #0f151a);
+  --paper-raised: light-dark(#ffffff, #121920);
+  --line: light-dark(#e5e1d9, #1e262e);
+  --line-strong: light-dark(#cec8bc, #2b3742);
+  --accent: light-dark(#0f766e, #5fd4c4);
+  --accent-soft: light-dark(#e9f3f0, #0d2a27);
+  --accent-ink: light-dark(#0b5d55, #7fe3d5);
   --warn: light-dark(#b45309, #f0b429);
-  --code-bg: light-dark(#f6f8fa, #121820);
+  --code-bg: light-dark(#f6f4ef, #0e1519);
   --sans: "Inter", "Segoe UI", "Helvetica Neue", system-ui, -apple-system, sans-serif;
+  --serif:
+    "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia,
+    "Times New Roman", serif;
   --mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, monospace;
 }
 
@@ -38,6 +41,10 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 html {
@@ -471,11 +478,19 @@ main {
 
 .facts div {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: baseline;
+  gap: 9px;
   padding: 6px 0;
   border-top: 1px solid var(--line);
   font-size: 12.5px;
+}
+
+/* A leader, dotted, the way a table of contents carries the eye across a gap. */
+.facts .lead {
+  flex: 1;
+  min-width: 12px;
+  transform: translateY(-3px);
+  border-bottom: 1px dotted rgb(205 216 227 / 28%);
 }
 
 .facts div:first-child {
@@ -490,6 +505,7 @@ main {
   margin: 0;
   color: var(--ink);
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* An outline of the page: the packages, and what each one holds. */
@@ -513,8 +529,20 @@ main {
 .outline a.sub {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 7px;
+}
+
+.outline a.sub::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  min-width: 8px;
+  transform: translateY(-3px);
+  border-bottom: 1px dotted var(--line);
+}
+
+.outline a.sub em {
+  order: 2;
 }
 
 .outline a.sub em {
@@ -545,11 +573,13 @@ main {
 }
 
 h1 {
-  font-size: clamp(30px, 4vw, 44px);
-  line-height: 1.12;
-  letter-spacing: -0.028em;
-  margin: 18px 0 14px;
-  font-weight: 680;
+  font-family: var(--serif);
+  font-size: clamp(30px, 4vw, 45px);
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  margin: 20px 0 14px;
+  font-weight: 600;
+  text-wrap: balance;
 }
 
 h1 .thin {
@@ -565,6 +595,7 @@ h1 .thin {
 }
 
 h2 {
+  text-wrap: balance;
   font-size: 23px;
   letter-spacing: -0.018em;
   margin: 56px 0 18px;
@@ -615,6 +646,7 @@ h3.group .count {
 
 p {
   margin: 0 0 14px;
+  text-wrap: pretty;
 }
 
 .package h2 {
@@ -654,7 +686,7 @@ pre code {
 }
 
 :not(pre) > code {
-  padding: 1px 5px;
+  padding: 1px 4px;
   border: 1px solid var(--line);
   background: var(--paper-sunk);
   overflow-wrap: anywhere;
