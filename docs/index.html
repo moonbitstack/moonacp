@@ -67,25 +67,6 @@
 
         <pre><code>moon add moonbitstack/moonacp</code></pre>
 
-        <div class="transcript">
-          <header>
-            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M2 4.5h12M2 8h12M2 11.5h8" stroke-linecap="round" />
-            </svg>
-            a real session, one message to a line
-          </header>
-          <div class="body">
-            <div class="line"><span class="who">editor</span><span class="what">{"id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{}}}</span></div>
-            <div class="line agent"><span class="who">agent</span><span class="what">{"id":1,"result":{"protocolVersion":1,"agentCapabilities":{"loadSession":true,…}}}</span></div>
-            <div class="line"><span class="who">editor</span><span class="what">{"id":2,"method":"session/new","params":{"cwd":"/work","mcpServers":[]}}</span></div>
-            <div class="line agent"><span class="who">agent</span><span class="what">{"id":2,"result":{"sessionId":"notes-1","modes":{…},"configOptions":[…]}}</span></div>
-            <div class="line"><span class="who">editor</span><span class="what">{"id":3,"method":"session/prompt","params":{"sessionId":"notes-1","prompt":[{"type":"text","text":"hello"}]}}</span></div>
-            <div class="line agent"><span class="who">agent</span><span class="what">{"method":"session/update","params":{"sessionId":"notes-1","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"You said: hello"}}}}</span></div>
-            <div class="line"><span class="who">editor</span><span class="what">{"method":"session/cancel","params":{"sessionId":"notes-1"}}</span></div>
-            <div class="line agent"><span class="who">agent</span><span class="what">{"id":3,"result":{"stopReason":"cancelled"}}</span></div>
-          </div>
-        </div>
-
         <div class="grid">
           <div class="card">
             <h4>
@@ -297,6 +278,35 @@ let conn = child.conn()
           <a href="https://github.com/moonbitstack/moonacp">GitHub</a>
         </footer>
       </main>
+
+      <aside class="rail wire" aria-label="The wire, and what is on this page">
+        <div>
+          <h4>The wire</h4>
+          <p>One turn, one message to a line: what the editor and the agent actually exchange.</p>
+          <div class="transcript">
+            <header><span class="verb">stdio</span>a real session, one message to a line</header>
+            <div class="body">
+              <div class="line"><span class="who">editor</span><span class="what">{"id":1,"method":"initialize","params":{"protocolVersion":1,"clientCapabilities":{}}}</span></div>
+              <div class="line agent"><span class="who">agent</span><span class="what">{"id":1,"result":{"protocolVersion":1,"agentCapabilities":{"loadSession":true,…}}}</span></div>
+              <div class="line"><span class="who">editor</span><span class="what">{"id":2,"method":"session/new","params":{"cwd":"/work","mcpServers":[]}}</span></div>
+              <div class="line agent"><span class="who">agent</span><span class="what">{"id":2,"result":{"sessionId":"notes-1","modes":{…},"configOptions":[…]}}</span></div>
+              <div class="line"><span class="who">editor</span><span class="what">{"id":3,"method":"session/prompt","params":{"sessionId":"notes-1","prompt":[{"type":"text","text":"hello"}]}}</span></div>
+              <div class="line agent"><span class="who">agent</span><span class="what">{"method":"session/update","params":{"sessionId":"notes-1","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"You said: hello"}}}}</span></div>
+              <div class="line"><span class="who">editor</span><span class="what">{"method":"session/cancel","params":{"sessionId":"notes-1"}}</span></div>
+              <div class="line agent"><span class="who">agent</span><span class="what">{"id":3,"result":{"stopReason":"cancelled"}}</span></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4>At a glance</h4>
+          <dl class="facts">
+            <div><dt>Schema</dt><dd>v1.29.1</dd></div>
+            <div><dt>Transports</dt><dd>stdio · ASGI</dd></div>
+            <div><dt>Packages</dt><dd>moonacp, /stdio, /asgi</dd></div>
+            <div><dt>Sides</dt><dd>agent and client</dd></div>
+          </dl>
+        </div>
+      </aside>
     </div>
 
     <script>

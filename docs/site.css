@@ -123,21 +123,26 @@ a:hover {
   }
 }
 
+/* Three columns, the way a reference is read: what is in the book, the book itself, and — in the
+   margin, the way ReDoc keeps a sample — what the wire actually says. Hairlines do the dividing;
+   nothing is boxed twice. */
 .shell {
   display: grid;
-  grid-template-columns: minmax(0, 264px) minmax(0, 1fr);
+  grid-template-columns: 244px minmax(0, 1fr) 304px;
+  grid-template-areas: "nav book wire";
   min-height: 100vh;
 }
 
 /* The sidebar: quiet, sticky, and never wider than a column of links. */
 .side {
+  grid-area: nav;
   position: sticky;
   top: 0;
   align-self: start;
   height: 100vh;
   overflow-y: auto;
   border-right: 1px solid var(--line);
-  background: var(--paper-sunk);
+  background: var(--paper);
   padding: 28px 22px 40px;
 }
 
@@ -257,8 +262,141 @@ a:hover {
 }
 
 main {
+  grid-area: book;
   min-width: 0;
-  padding: 48px clamp(20px, 5vw, 72px) 96px;
+  width: 100%;
+  max-width: 812px;
+  margin-inline: auto;
+  padding: 48px clamp(22px, 3.4vw, 52px) 96px;
+}
+
+/* The margin column: what the page is, and what the protocol says on the wire. Sticky, scrolls on
+   its own, and separated from the text by nothing but a hairline. */
+.rail {
+  grid-area: wire;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background: var(--paper-sunk);
+  padding: 30px 20px 44px;
+  font-size: 13px;
+}
+
+.rail > * + * {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.rail h4 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.rail p {
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* The wire, told one message to a line: each message becomes a row with its own hairline. */
+.rail .transcript {
+  margin: 0;
+  box-shadow: none;
+}
+
+.rail .transcript header {
+  padding: 7px 12px;
+  font-size: 11px;
+}
+
+.rail .transcript .body {
+  max-height: none;
+  padding: 2px 0;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.rail .transcript .line {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.rail .transcript .line:first-child {
+  border-top: 0;
+}
+
+.rail .transcript .who {
+  text-align: left;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* A fact list: two columns, a hairline between rows, no boxes. */
+.facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+}
+
+.facts div:first-child {
+  border-top: 0;
+}
+
+.facts dt {
+  color: var(--ink-faint);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--ink);
+  text-align: right;
+}
+
+/* An outline of the page: the packages, and what each one holds. */
+.outline {
+  display: grid;
+  gap: 2px;
+}
+
+.outline a {
+  display: block;
+  padding: 3px 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.outline a:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.outline .sub {
+  padding-left: 12px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  border-left: 1px solid var(--line);
 }
 
 .eyebrow {
@@ -298,7 +436,9 @@ h1 .thin {
 h2 {
   font-size: 23px;
   letter-spacing: -0.018em;
-  margin: 56px 0 8px;
+  margin: 56px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
   font-weight: 640;
   scroll-margin-top: 24px;
 }
@@ -394,28 +534,52 @@ pre code {
   color: var(--accent);
 }
 
-/* The reference: one entry per public item, signature first. */
+/* The reference: one entry per public item, in two columns — the name to look up on the left, what
+   it takes, gives back and means on the right, with a hairline between them. The same shape ReDoc
+   gives a field. */
 .item {
-  padding: 18px 0 16px;
-  border-bottom: 1px solid var(--line);
   display: grid;
-  gap: 8px;
+  grid-template-columns: 236px minmax(0, 1fr);
+  border-bottom: 1px solid var(--line);
 }
 
 .item:last-child {
   border-bottom: 0;
 }
 
-.signature {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+.entry-name {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 5px;
+  padding: 14px 16px 14px 0;
+  border-right: 1px solid var(--line);
   min-width: 0;
 }
 
-.signature code {
-  font-size: 13.5px;
-  line-height: 1.6;
+.entry-name code {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.entry-body {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 13px 0 14px 16px;
+  min-width: 0;
+}
+
+.entry-body .tail {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-faint);
   overflow-wrap: anywhere;
 }
 
@@ -589,9 +753,137 @@ footer.page {
 
 /* Narrow screens: the sidebar becomes a strip of links above the content, nothing scrolls
    sideways, and long identifiers break instead of pushing the page wide. */
+/* The wire: the margin column kept dark, the way a sample panel is kept dark — this is what the
+   protocol says, not prose about it, and it should never be mistaken for prose. */
+.rail.wire {
+  padding: 0 0 40px;
+  background: #1b2732;
+  border-left-color: #23303c;
+  color: #cdd8e3;
+}
+
+.rail.wire > div {
+  padding: 18px 20px;
+}
+
+.rail.wire > * + * {
+  border-top: 1px solid #2a3947;
+}
+
+.rail.wire h4 {
+  color: #7f93a5;
+}
+
+.rail.wire p {
+  color: #9fb0c0;
+}
+
+.rail.wire .verb {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 0 7px;
+  border-radius: 4px;
+  background: #0f766e;
+  color: #ffffff;
+  font: 600 9.5px/1.8 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.rail.wire .transcript {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.rail.wire .transcript header {
+  padding: 0 0 12px;
+  border-bottom: 1px solid #2a3947;
+  background: transparent;
+  color: #9fb0c0;
+}
+
+.rail.wire .transcript .body {
+  padding: 0;
+}
+
+.rail.wire .transcript .line {
+  padding: 8px 0;
+  border-top: 1px solid #22313d;
+}
+
+.rail.wire .transcript .line:first-child {
+  border-top: 0;
+}
+
+.rail.wire .transcript .line:hover {
+  background: transparent;
+}
+
+.rail.wire .transcript .who {
+  color: #7f93a5;
+}
+
+.rail.wire .transcript .line.agent .who {
+  color: #4dd4c4;
+}
+
+.rail.wire .transcript .what {
+  color: #b9c7d4;
+}
+
+.rail.wire .transcript .line.agent .what {
+  color: #eaf2f8;
+}
+
+.rail.wire .facts div {
+  border-top-color: #2a3947;
+}
+
+.rail.wire .facts dt {
+  color: #7f93a5;
+}
+
+.rail.wire .facts dd {
+  color: #e2eaf2;
+}
+
+/* The three columns give ground before the margin column gives up: a narrower page, not a shorter
+   one. */
+@media (width <= 1180px) {
+  .shell {
+    grid-template-columns: 220px minmax(0, 1fr) 264px;
+  }
+}
+
+/* Past this point the margin column has nothing left to be a margin of: it becomes the end of the
+   article, and an outline — which would only repeat the article — steps out of the way. */
+@media (width <= 980px) {
+  .shell {
+    grid-template-columns: 244px minmax(0, 1fr);
+    grid-template-areas: "nav book" "nav wire";
+  }
+
+  .rail {
+    position: static;
+    height: auto;
+    width: 100%;
+    max-width: 812px;
+    margin-inline: auto;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .rail.outline {
+    display: none;
+  }
+}
+
 @media (width <= 860px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "nav" "book" "wire";
   }
 
   .side {

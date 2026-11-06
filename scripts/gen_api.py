@@ -148,6 +148,25 @@ def kind_of(text: str) -> str:
     return "function"
 
 
+def split_signature(text: str) -> tuple[str, str]:
+    """The name a reader looks up, and the rest of the line: what it takes and gives back."""
+    match = re.match(r"(?:async\s+)?fn\s+([A-Za-z_]\w*(?:::[A-Za-z_]\w*)?)", text)
+    if match:
+        return match.group(1), text[match.end() :].strip()
+    match = re.match(r"(?:let|const)\s+([A-Za-z_]\w*)\s*(.*)", text)
+    if match:
+        return match.group(1), match.group(2).strip()
+    match = re.match(r"(?:\(all\)\s*)?(?:struct|enum|suberror|type|trait)\s+([A-Za-z_]\w*)", text)
+    if match:
+        return match.group(1), ""
+    return text, ""
+
+
+def slug(name: str) -> str:
+    """An anchor for a group heading: "Types and methods" becomes "types-and-methods"."""
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
 def inline_markup(text: str) -> str:
     """Documentation prose: escaped, with `code` spans turned into real ones."""
     return re.sub(r"`([^`]+)`", r"<code>\1</code>", html.escape(text))
@@ -167,6 +186,7 @@ KIND_LABEL = {
 def render(api_doc: str) -> str:
     """The whole page, with one section per package and one card per item."""
     sections = []
+    outline: list[tuple[str, str, list[tuple[str, str]]]] = []
     for package, blurb, directory in PACKAGES:
         items = source_items(directory)
         groups: dict[str, list[dict]] = {name: [] for name, _ in GROUPS}
@@ -187,14 +207,12 @@ def render(api_doc: str) -> str:
             group = groups[name]
             if not group:
                 continue
-            body.append(f'<h3 class="group">{name}</h3>')
+            body.append(f'<h3 class="group" id="{package.replace("/", "-")}-{slug(name)}">{name}</h3>')
             for item in group:
                 kind = kind_of(item["text"])
                 label, css = KIND_LABEL[kind]
-                signature = html.escape(item["text"])
-                signature = re.sub(
-                    r"\b(pub|async)\b\s*", "", signature, count=0
-                ).strip()
+                plain = re.sub(r"\b(pub|async)\b\s*", "", item["text"]).strip()
+                name, tail = split_signature(plain)
                 doc = ""
                 if item["doc"]:
                     paragraphs = [
@@ -204,12 +222,21 @@ def render(api_doc: str) -> str:
                     ]
                     doc = "\n".join(paragraphs)
                 anchor = f"{package.replace('/', '-')}-{len(body)}"
+                rest = f'<code class="tail">{html.escape(tail)}</code>' if tail else ""
                 body.append(
                     f'<article class="item" id="{html.escape(anchor)}">'
-                    f'<div class="signature"><span class="kind {css}">{label}</span>'
-                    f"<code>{signature}</code></div>"
-                    f'<div class="doc">{doc}</div></article>'
+                    f'<div class="entry-name"><span class="kind {css}">{label}</span>'
+                    f"<code>{html.escape(name)}</code></div>"
+                    f'<div class="entry-body">{rest}<div class="doc">{doc}</div></div>'
+                    f"</article>"
                 )
+        outline.append(
+            (
+                package.replace("/", "-"),
+                package,
+                [(slug(name), name) for name, _ in GROUPS if groups[name]],
+            )
+        )
         sections.append(
             f'<section class="package" id="{html.escape(package.replace("/", "-"))}">'
             f'<h2><code>{html.escape(package)}</code></h2><p class="blurb">{html.escape(blurb)}</p>'
@@ -220,7 +247,19 @@ def render(api_doc: str) -> str:
         f'<a href="#{html.escape(package.replace("/", "-"))}"><code>{html.escape(package)}</code></a>'
         for package, _, _ in PACKAGES
     )
-    return api_doc.replace("<!-- packages -->", nav).replace("<!-- sections -->", "\n".join(sections))
+    contents = "\n".join(
+        f'<a href="#{anchor}"><code>{html.escape(package)}</code></a>'
+        + "".join(
+            f'<a class="sub" href="#{anchor}-{group}">{html.escape(name)}</a>'
+            for group, name in groups
+        )
+        for anchor, package, groups in outline
+    )
+    return (
+        api_doc.replace("<!-- packages -->", nav)
+        .replace("<!-- outline -->", contents)
+        .replace("<!-- sections -->", "\n".join(sections))
+    )
 
 
 def main(argv: list[str]) -> int:
