@@ -21,9 +21,6 @@
   --accent-ink: light-dark(#00695f, #7ff0e0);
   --warn: light-dark(#b45309, #f0b429);
   --code-bg: light-dark(#f6f8fa, #121820);
-  --shadow:
-    light-dark(0 1px 2px rgb(16 24 40 / 6%), 0 1px 2px rgb(0 0 0 / 40%)),
-    light-dark(0 8px 24px rgb(16 24 40 / 6%), 0 12px 32px rgb(0 0 0 / 32%));
   --sans: "Inter", "Segoe UI", "Helvetica Neue", system-ui, -apple-system, sans-serif;
   --mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Mono", Menlo, monospace;
 }
@@ -86,7 +83,6 @@ a:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
 /* Scrollbars: never the browser's. The page thumb hides at the top and shows once you move, and the
@@ -106,7 +102,6 @@ button:focus-visible {
   html::-webkit-scrollbar-thumb,
   .scroll::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
-    border-radius: 99px;
     background-color: color-mix(in srgb, var(--ink) 22%, transparent);
     background-clip: content-box;
   }
@@ -153,7 +148,6 @@ button:focus-visible {
   .side::-webkit-scrollbar-thumb,
   pre::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
-    border-radius: 99px;
     background-color: color-mix(in srgb, var(--ink) 20%, transparent);
     background-clip: content-box;
   }
@@ -166,7 +160,6 @@ button:focus-visible {
   .rail::-webkit-scrollbar-thumb,
   .transcript .body::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
-    border-radius: 99px;
     background-color: rgb(234 242 248 / 18%);
     background-clip: content-box;
   }
@@ -298,7 +291,6 @@ body.resizing {
   height: 30px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 8px;
   background: transparent;
   color: var(--ink-faint);
   cursor: pointer;
@@ -360,8 +352,8 @@ body.resizing {
 
 .side nav a {
   display: block;
-  padding: 6px 10px;
-  border-radius: 7px;
+  padding: 6px 10px 6px 8px;
+  border-left: 2px solid transparent;
   color: var(--ink-soft);
   font-size: 14px;
 }
@@ -372,7 +364,9 @@ body.resizing {
   text-decoration: none;
 }
 
+/* The page you are on is marked by a rule at its edge, not by a box around it. */
 .side nav a[aria-current="page"] {
+  border-left-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent-ink);
   font-weight: 550;
@@ -435,7 +429,6 @@ main {
 /* The wire, told one message to a line: each message becomes a row with its own hairline. */
 .rail .transcript {
   margin: 0;
-  box-shadow: none;
 }
 
 .rail .transcript header {
@@ -544,7 +537,6 @@ main {
   gap: 8px;
   padding: 3px 10px 3px 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
-  border-radius: 99px;
   background: var(--accent-soft);
   color: var(--accent-ink);
   font-size: 12px;
@@ -651,7 +643,6 @@ pre {
   padding: 16px 18px;
   background: var(--code-bg);
   border: 1px solid var(--line);
-  border-radius: 10px;
   overflow: auto;
   line-height: 1.6;
   color: var(--ink);
@@ -665,7 +656,6 @@ pre code {
 :not(pre) > code {
   padding: 1px 5px;
   border: 1px solid var(--line);
-  border-radius: 5px;
   background: var(--paper-sunk);
   overflow-wrap: anywhere;
 }
@@ -679,11 +669,9 @@ pre code {
 }
 
 .card {
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
   padding: 18px 18px 16px;
   background: var(--paper-raised);
-  box-shadow: var(--shadow);
 }
 
 .card h4 {
@@ -783,7 +771,6 @@ pre code {
   flex: none;
   margin-top: 2px;
   padding: 1px 7px;
-  border-radius: 5px;
   font: 600 10.5px/1.7 var(--mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -830,10 +817,8 @@ pre code {
 /* A transcript, for a library whose product is a conversation. */
 .transcript {
   border: 1px solid var(--line);
-  border-radius: 12px;
   overflow: hidden;
   background: var(--paper-raised);
-  box-shadow: var(--shadow);
   margin: 18px 0 8px;
 }
 
@@ -921,7 +906,6 @@ td code {
 
 .note {
   border-left: 3px solid var(--accent);
-  border-radius: 0 8px 8px 0;
   background: var(--accent-soft);
   padding: 12px 16px;
   margin: 18px 0;
@@ -969,7 +953,6 @@ footer.page {
   appearance: none;
   border: 0;
   padding: 3px 10px;
-  border-radius: 6px;
   background: transparent;
   color: #8b9bab;
   font: 600 10.5px/1.6 var(--mono);
@@ -991,7 +974,6 @@ footer.page {
   appearance: none;
   padding: 2px 10px;
   border: 1px solid #33434f;
-  border-radius: 6px;
   background: transparent;
   color: #9fb0c0;
   font: 500 10.5px/1.7 var(--mono);
@@ -1015,7 +997,6 @@ footer.page {
   margin: 0;
   padding: 12px 0 0;
   border: 0;
-  border-radius: 0;
   background: transparent;
   color: #b9c7d4;
   font-size: 10.5px;
@@ -1066,7 +1047,6 @@ footer.page {
   display: inline-block;
   margin-right: 8px;
   padding: 0 7px;
-  border-radius: 4px;
   background: #0f766e;
   color: #ffffff;
   font: 600 9.5px/1.8 var(--mono);
@@ -1077,7 +1057,6 @@ footer.page {
 
 .rail.wire .transcript {
   border: 0;
-  border-radius: 0;
   background: transparent;
 }
 
@@ -1211,6 +1190,17 @@ footer.page {
   .side nav p,
   .side footer {
     display: none;
+  }
+
+  /* A strip of links is marked from below, not from the left. */
+  .side nav a {
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    padding: 6px 10px;
+  }
+
+  .side nav a[aria-current="page"] {
+    border-bottom-color: var(--accent);
   }
 
   main {
