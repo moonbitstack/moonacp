@@ -58,8 +58,10 @@ class EchoAgent(acp.Agent):
 
 async def main() -> int:
     reader, writer = await acp.stdio_streams()
+    # `listening=False` and then `listen()`: the constructor starts a reader of its own otherwise,
+    # and two readers on one stream raise as soon as a message takes long enough to arrive.
     connection = acp.AgentSideConnection(
-        lambda client: EchoAgent().bind(client), writer, reader
+        lambda client: EchoAgent().bind(client), writer, reader, listening=False
     )
     try:
         await connection.listen()
