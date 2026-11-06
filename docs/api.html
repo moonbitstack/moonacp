@@ -8,19 +8,36 @@
       name="description"
       content="Every public function, type and trait of moonacp, the Agent Client Protocol for MoonBit."
     />
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="site.css" />
+    <script>
+      // Runs before the first paint, so a chosen theme never flashes the other one.
+      try {
+        const saved = localStorage.getItem("moonacp-theme");
+        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+      } catch (error) {
+        // Storage is off; the platform's own preference still applies.
+      }
+    </script>
   </head>
   <body>
     <div class="shell">
       <aside class="side">
         <div class="brand">
-          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-            <rect x="1" y="1" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.6" />
-            <path d="M6 8.5 9 11l-3 2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            <path d="M12 13.5h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-          </svg>
           <span>moonacp<small>Agent Client Protocol</small></span>
+          <button
+            class="theme-toggle"
+            type="button"
+            aria-label="Switch to dark theme"
+            aria-pressed="false"
+          >
+            <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <circle cx="8" cy="8" r="3.1" />
+              <path d="M8 1.4v1.7M8 12.9v1.7M1.4 8h1.7M12.9 8h1.7M3.3 3.3l1.2 1.2M11.5 11.5l1.2 1.2M12.7 3.3l-1.2 1.2M4.5 11.5l-1.2 1.2" stroke-linecap="round" />
+            </svg>
+            <svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M13.4 9.9A5.7 5.7 0 0 1 6.1 2.6a5.7 5.7 0 1 0 7.3 7.3Z" stroke-linejoin="round" />
+            </svg>
+          </button>
         </div>
         <nav>
           <p>Start</p>
@@ -44,9 +61,9 @@
         <section class="package" id="moonacp"><h2><code>moonacp</code></h2><p class="blurb">The protocol, its types, and the contracts on both sides.</p><h3 class="group">Values</h3>
 <article class="item" id="moonacp-1"><div class="signature"><span class="kind function">fn</span><code>fn PromptCapabilities::none() -&gt; PromptCapabilities</code></div><div class="doc"><p>Nothing supported: no images, no audio, no embedded context.</p></div></article>
 <article class="item" id="moonacp-2"><div class="signature"><span class="kind function">fn</span><code>fn McpCapabilities::none() -&gt; McpCapabilities</code></div><div class="doc"><p>No MCP transport supported.</p></div></article>
-<article class="item" id="moonacp-3"><div class="signature"><span class="kind function">fn</span><code>fn SessionCapabilities::none() -&gt; SessionCapabilities</code></div><div class="doc"><p>No session method beyond `session/new`.</p></div></article>
+<article class="item" id="moonacp-3"><div class="signature"><span class="kind function">fn</span><code>fn SessionCapabilities::none() -&gt; SessionCapabilities</code></div><div class="doc"><p>No session method beyond <code>session/new</code>.</p></div></article>
 <article class="item" id="moonacp-4"><div class="signature"><span class="kind function">fn</span><code>fn AgentAuthCapabilities::none() -&gt; AgentAuthCapabilities</code></div><div class="doc"><p>No authentication step offered.</p></div></article>
-<article class="item" id="moonacp-5"><div class="signature"><span class="kind function">fn</span><code>fn AgentCapabilities::none() -&gt; AgentCapabilities</code></div><div class="doc"><p>An agent that supports only `session/new` and `session/prompt`.</p></div></article>
+<article class="item" id="moonacp-5"><div class="signature"><span class="kind function">fn</span><code>fn AgentCapabilities::none() -&gt; AgentCapabilities</code></div><div class="doc"><p>An agent that supports only <code>session/new</code> and <code>session/prompt</code>.</p></div></article>
 <article class="item" id="moonacp-6"><div class="signature"><span class="kind function">fn</span><code>fn FileSystemCapabilities::none() -&gt; FileSystemCapabilities</code></div><div class="doc"><p>No file access granted.</p></div></article>
 <article class="item" id="moonacp-7"><div class="signature"><span class="kind function">fn</span><code>fn ClientAuthCapabilities::none() -&gt; ClientAuthCapabilities</code></div><div class="doc"><p>No terminal authentication offered by the client.</p></div></article>
 <article class="item" id="moonacp-8"><div class="signature"><span class="kind function">fn</span><code>fn ClientSessionCapabilities::none() -&gt; ClientSessionCapabilities</code></div><div class="doc"><p>No supplementary session features.</p></div></article>
@@ -63,32 +80,32 @@ to run in a task of its own while the other tasks call the agent.</p></div></art
 <article class="item" id="moonacp-17"><div class="signature"><span class="kind function">fn</span><code>fn Conn::notify( self : Conn, name : String, params : Json, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>A notice the protocol does not name.</p></div></article>
 <article class="item" id="moonacp-18"><div class="signature"><span class="kind function">fn</span><code>fn Conn::initialize( self : Conn, request : Initialize, ) -&gt; Initialized raise Refused</code></div><div class="doc"><p>Negotiates the version and trades capabilities. Call it once, before anything else.</p></div></article>
 <article class="item" id="moonacp-19"><div class="signature"><span class="kind function">fn</span><code>fn Conn::authenticate( self : Conn, request : Authenticate, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Runs one of the agent&#x27;s authentication methods.</p></div></article>
-<article class="item" id="moonacp-20"><div class="signature"><span class="kind function">fn</span><code>fn Conn::logout(self : Conn) -&gt; Unit raise Refused</code></div><div class="doc"><p>Drops whatever `authenticate` established.</p></div></article>
+<article class="item" id="moonacp-20"><div class="signature"><span class="kind function">fn</span><code>fn Conn::logout(self : Conn) -&gt; Unit raise Refused</code></div><div class="doc"><p>Drops whatever <code>authenticate</code> established.</p></div></article>
 <article class="item" id="moonacp-21"><div class="signature"><span class="kind function">fn</span><code>fn Conn::new_session( self : Conn, request : NewSession, ) -&gt; SessionStarted raise Refused</code></div><div class="doc"><p>Starts a session and returns what the agent says about it: identifier, modes, options.</p></div></article>
-<article class="item" id="moonacp-22"><div class="signature"><span class="kind function">fn</span><code>fn Conn::load_session( self : Conn, request : LoadSession, ) -&gt; SessionStarted raise Refused</code></div><div class="doc"><p>Reopens a session; the updates that replay its history arrive on `run`.</p></div></article>
+<article class="item" id="moonacp-22"><div class="signature"><span class="kind function">fn</span><code>fn Conn::load_session( self : Conn, request : LoadSession, ) -&gt; SessionStarted raise Refused</code></div><div class="doc"><p>Reopens a session; the updates that replay its history arrive on <code>run</code>.</p></div></article>
 <article class="item" id="moonacp-23"><div class="signature"><span class="kind function">fn</span><code>fn Conn::resume_session( self : Conn, request : ResumeSession, ) -&gt; SessionStarted raise Refused</code></div><div class="doc"><p>Reattaches to a live session without replaying anything.</p></div></article>
 <article class="item" id="moonacp-24"><div class="signature"><span class="kind function">fn</span><code>fn Conn::list_sessions( self : Conn, request : ListSessions, ) -&gt; SessionList raise Refused</code></div><div class="doc"><p>The sessions the agent remembers, one page at a time.</p></div></article>
 <article class="item" id="moonacp-25"><div class="signature"><span class="kind function">fn</span><code>fn Conn::delete_session( self : Conn, request : DeleteSession, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Forgets a session.</p></div></article>
-<article class="item" id="moonacp-26"><div class="signature"><span class="kind function">fn</span><code>fn Conn::close_session( self : Conn, request : CloseSession, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Ends a running session, as if `session/cancel` had been sent.</p></div></article>
+<article class="item" id="moonacp-26"><div class="signature"><span class="kind function">fn</span><code>fn Conn::close_session( self : Conn, request : CloseSession, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Ends a running session, as if <code>session/cancel</code> had been sent.</p></div></article>
 <article class="item" id="moonacp-27"><div class="signature"><span class="kind function">fn</span><code>fn Conn::set_mode( self : Conn, request : SetMode, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Switches the session&#x27;s mode.</p></div></article>
 <article class="item" id="moonacp-28"><div class="signature"><span class="kind function">fn</span><code>fn Conn::set_config_option( self : Conn, request : SetConfigOption, ) -&gt; Array[ConfigOption] raise Refused</code></div><div class="doc"><p>Sets one configuration option and returns the whole list, as the protocol requires.</p></div></article>
-<article class="item" id="moonacp-29"><div class="signature"><span class="kind function">fn</span><code>fn Conn::prompt( self : Conn, request : Prompt, ) -&gt; PromptResult raise Refused</code></div><div class="doc"><p>Sends one turn and waits for its answer. Updates arrive through the client&#x27;s `update` while this
+<article class="item" id="moonacp-29"><div class="signature"><span class="kind function">fn</span><code>fn Conn::prompt( self : Conn, request : Prompt, ) -&gt; PromptResult raise Refused</code></div><div class="doc"><p>Sends one turn and waits for its answer. Updates arrive through the client&#x27;s <code>update</code> while this
 waits, because the connection is being run in another task.</p></div></article>
 <article class="item" id="moonacp-30"><div class="signature"><span class="kind function">fn</span><code>fn Conn::cancel( self : Conn, session_id : String, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Asks the agent to stop the turn running in a session. A notice: nothing comes back, and the turn
-answers `Cancelled` on its own.</p></div></article>
+answers <code>Cancelled</code> on its own.</p></div></article>
 <article class="item" id="moonacp-31"><div class="signature"><span class="kind function">fn</span><code>fn Conn::client(self : Conn) -&gt; &amp;Client</code></div><div class="doc"><p>The client this connection feeds.</p></div></article>
 <article class="item" id="moonacp-32"><div class="signature"><span class="kind function">fn</span><code>fn Role::to_string(self : Role) -&gt; String</code></div><div class="doc"><p>The name the role travels as.</p></div></article>
-<article class="item" id="moonacp-33"><div class="signature"><span class="kind function">fn</span><code>fn Role::of(name : String) -&gt; Role?</code></div><div class="doc"><p>The role with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-33"><div class="signature"><span class="kind function">fn</span><code>fn Role::of(name : String) -&gt; Role?</code></div><div class="doc"><p>The role with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-34"><div class="signature"><span class="kind function">fn</span><code>fn TerminalRef::new(terminal_id : String) -&gt; TerminalRef</code></div><div class="doc"><p>A reference to a terminal, as a tool call embeds it.</p></div></article>
 <article class="item" id="moonacp-35"><div class="signature"><span class="kind function">fn</span><code>fn StringFormat::to_string(self : StringFormat) -&gt; String</code></div><div class="doc"><p>The name the format travels as.</p></div></article>
-<article class="item" id="moonacp-36"><div class="signature"><span class="kind function">fn</span><code>fn StringFormat::of(name : String) -&gt; StringFormat?</code></div><div class="doc"><p>The format with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-36"><div class="signature"><span class="kind function">fn</span><code>fn StringFormat::of(name : String) -&gt; StringFormat?</code></div><div class="doc"><p>The format with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-37"><div class="signature"><span class="kind value">let</span><code>let parse_error : Int32 = -32700</code></div><div class="doc"><p>The text is not JSON.</p></div></article>
 <article class="item" id="moonacp-38"><div class="signature"><span class="kind value">let</span><code>let invalid_request : Int32 = -32600</code></div><div class="doc"><p>The value is not a valid message.</p></div></article>
 <article class="item" id="moonacp-39"><div class="signature"><span class="kind value">let</span><code>let method_not_found : Int32 = -32601</code></div><div class="doc"><p>Nobody handles that method.</p></div></article>
 <article class="item" id="moonacp-40"><div class="signature"><span class="kind value">let</span><code>let invalid_params : Int32 = -32602</code></div><div class="doc"><p>The parameters are not what the method takes.</p></div></article>
 <article class="item" id="moonacp-41"><div class="signature"><span class="kind value">let</span><code>let internal_error : Int32 = -32603</code></div><div class="doc"><p>The handler failed for its own reasons.</p></div></article>
 <article class="item" id="moonacp-42"><div class="signature"><span class="kind value">let</span><code>let request_cancelled : Int32 = -32800</code></div><div class="doc"><p>The caller asked for the work to stop.</p></div></article>
-<article class="item" id="moonacp-43"><div class="signature"><span class="kind value">let</span><code>let authentication_required : Int32 = -32000</code></div><div class="doc"><p>The client has to `authenticate` before this method works.</p></div></article>
+<article class="item" id="moonacp-43"><div class="signature"><span class="kind value">let</span><code>let authentication_required : Int32 = -32000</code></div><div class="doc"><p>The client has to <code>authenticate</code> before this method works.</p></div></article>
 <article class="item" id="moonacp-44"><div class="signature"><span class="kind value">let</span><code>let resource_not_found : Int32 = -32002</code></div><div class="doc"><p>A path, a session or a resource named in the request does not exist.</p></div></article>
 <article class="item" id="moonacp-45"><div class="signature"><span class="kind function">fn</span><code>fn Refused::new(code : Int32, message : String, data? : Json) -&gt; Refused</code></div><div class="doc"><p>An error object with a code of your choosing.</p></div></article>
 <article class="item" id="moonacp-46"><div class="signature"><span class="kind function">fn</span><code>fn Refused::code(self : Refused) -&gt; Int32</code></div><div class="doc"><p>The code this failure travels as.</p></div></article>
@@ -96,23 +113,23 @@ answers `Cancelled` on its own.</p></div></article>
 <article class="item" id="moonacp-48"><div class="signature"><span class="kind function">fn</span><code>fn Refused::data(self : Refused) -&gt; Json?</code></div><div class="doc"><p>Anything else attached to the failure.</p></div></article>
 <article class="item" id="moonacp-49"><div class="signature"><span class="kind function">fn</span><code>fn Refused::failure(self : Refused) -&gt; @moonjrpc.Failure</code></div><div class="doc"><p>The wire form of a failure.</p></div></article>
 <article class="item" id="moonacp-50"><div class="signature"><span class="kind function">fn</span><code>fn failure_of(error : Error) -&gt; @moonjrpc.Failure</code></div><div class="doc"><p>Turns anything a handler raised into the error object to send: the wire code is kept, and
-anything that is not a `Refused` becomes -32603 with no detail, because what a handler trips
+anything that is not a <code>Refused</code> becomes -32603 with no detail, because what a handler trips
 over is not the caller&#x27;s to read.</p></div></article>
 <article class="item" id="moonacp-51"><div class="signature"><span class="kind function">fn</span><code>fn refused_of(failure : @moonjrpc.Failure) -&gt; Refused</code></div><div class="doc"><p>The reverse, for a call that came back with an error object.</p></div></article>
 <article class="item" id="moonacp-52"><div class="signature"><span class="kind value">let</span><code>let protocol_version : Int32 = 1</code></div><div class="doc"><p>The protocol version this library speaks. It only changes when the protocol breaks.</p></div></article>
-<article class="item" id="moonacp-53"><div class="signature"><span class="kind function">fn</span><code>fn Initialized::new() -&gt; Initialized</code></div><div class="doc"><p>A first answer for an agent that supports nothing beyond `session/new`: the version, no
+<article class="item" id="moonacp-53"><div class="signature"><span class="kind function">fn</span><code>fn Initialized::new() -&gt; Initialized</code></div><div class="doc"><p>A first answer for an agent that supports nothing beyond <code>session/new</code>: the version, no
 capabilities, no authentication.</p></div></article>
 <article class="item" id="moonacp-54"><div class="signature"><span class="kind function">fn</span><code>fn StopReason::to_string(self : StopReason) -&gt; String</code></div><div class="doc"><p>The name the reason travels as.</p></div></article>
-<article class="item" id="moonacp-55"><div class="signature"><span class="kind function">fn</span><code>fn StopReason::of(name : String) -&gt; StopReason?</code></div><div class="doc"><p>The reason with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-55"><div class="signature"><span class="kind function">fn</span><code>fn StopReason::of(name : String) -&gt; StopReason?</code></div><div class="doc"><p>The reason with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-56"><div class="signature"><span class="kind function">fn</span><code>fn serve(agent : &amp;Agent, frames : &amp;@peer.Frames) -&gt; @peer.Peer</code></div><div class="doc"><p>Serves an agent over any transport: the caller runs the returned peer. Messages are answered in
 the order they arrive, and batches are refused, because the protocol has none.</p></div></article>
-<article class="item" id="moonacp-57"><div class="signature"><span class="kind function">fn</span><code>fn Session::id(self : Session) -&gt; String</code></div><div class="doc"><p>The session&#x27;s identifier, the one the client sent with `session/new`.</p></div></article>
+<article class="item" id="moonacp-57"><div class="signature"><span class="kind function">fn</span><code>fn Session::id(self : Session) -&gt; String</code></div><div class="doc"><p>The session&#x27;s identifier, the one the client sent with <code>session/new</code>.</p></div></article>
 <article class="item" id="moonacp-58"><div class="signature"><span class="kind function">fn</span><code>fn Session::update( self : Session, update : SessionUpdate, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Sends one update. Updates are notifications, so they are never answered and never fail the turn
-by themselves; the connection going away raises `Closed`.</p></div></article>
-<article class="item" id="moonacp-59"><div class="signature"><span class="kind function">fn</span><code>fn Session::request_permission( self : Session, ask : Permission, ) -&gt; Outcome raise Refused</code></div><div class="doc"><p>Asks the user to allow a tool call. The client answers with the option it picked, or `Cancelled`
+by themselves; the connection going away raises <code>Closed</code>.</p></div></article>
+<article class="item" id="moonacp-59"><div class="signature"><span class="kind function">fn</span><code>fn Session::request_permission( self : Session, ask : Permission, ) -&gt; Outcome raise Refused</code></div><div class="doc"><p>Asks the user to allow a tool call. The client answers with the option it picked, or <code>Cancelled</code>
 when the prompt was dismissed; a client that never answers blocks the turn, so keep the ask in
 the turn&#x27;s own task.</p></div></article>
-<article class="item" id="moonacp-60"><div class="signature"><span class="kind function">fn</span><code>fn Session::read_text_file( self : Session, path : String, line? : Int64, limit? : Int64, ) -&gt; String raise Refused</code></div><div class="doc"><p>Reads a text file through the client, sliced from `line` when one is given.</p></div></article>
+<article class="item" id="moonacp-60"><div class="signature"><span class="kind function">fn</span><code>fn Session::read_text_file( self : Session, path : String, line? : Int64, limit? : Int64, ) -&gt; String raise Refused</code></div><div class="doc"><p>Reads a text file through the client, sliced from <code>line</code> when one is given.</p></div></article>
 <article class="item" id="moonacp-61"><div class="signature"><span class="kind function">fn</span><code>fn Session::write_text_file( self : Session, path : String, content : String, ) -&gt; Unit raise Refused</code></div><div class="doc"><p>Writes a text file through the client.</p></div></article>
 <article class="item" id="moonacp-62"><div class="signature"><span class="kind function">fn</span><code>fn Session::terminal( self : Session, command : String, args? : Array[String], env? : Array[EnvVariable], cwd? : String, output_byte_limit? : Int64, ) -&gt; Terminal raise Refused</code></div><div class="doc"><p>Runs a command in a terminal the client owns. The returned handle reads, waits for, kills and
 releases it.</p></div></article>
@@ -123,48 +140,48 @@ the tool call it came from when one is given.</p></div></article>
 <article class="item" id="moonacp-66"><div class="signature"><span class="kind function">fn</span><code>fn Terminal::wait(self : Terminal) -&gt; ExitStatus raise Refused</code></div><div class="doc"><p>Waits for the command to exit and reports how it did.</p></div></article>
 <article class="item" id="moonacp-67"><div class="signature"><span class="kind function">fn</span><code>fn Terminal::kill(self : Terminal) -&gt; Unit raise Refused</code></div><div class="doc"><p>Stops the command without giving the terminal back.</p></div></article>
 <article class="item" id="moonacp-68"><div class="signature"><span class="kind function">fn</span><code>fn Terminal::release(self : Terminal) -&gt; Unit raise Refused</code></div><div class="doc"><p>Gives the terminal back. The client may reuse it for the next command.</p></div></article>
-<article class="item" id="moonacp-69"><div class="signature"><span class="kind function">fn</span><code>fn Terminal::reference(self : Terminal) -&gt; TerminalRef</code></div><div class="doc"><p>The terminal as a tool call refers to it, for `ToolCallContent`.</p></div></article>
+<article class="item" id="moonacp-69"><div class="signature"><span class="kind function">fn</span><code>fn Terminal::reference(self : Terminal) -&gt; TerminalRef</code></div><div class="doc"><p>The terminal as a tool call refers to it, for <code>ToolCallContent</code>.</p></div></article>
 <article class="item" id="moonacp-70"><div class="signature"><span class="kind function">fn</span><code>fn PlanEntryPriority::to_string(self : PlanEntryPriority) -&gt; String</code></div><div class="doc"><p>The name the priority travels as.</p></div></article>
-<article class="item" id="moonacp-71"><div class="signature"><span class="kind function">fn</span><code>fn PlanEntryPriority::of(name : String) -&gt; PlanEntryPriority?</code></div><div class="doc"><p>The priority with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-71"><div class="signature"><span class="kind function">fn</span><code>fn PlanEntryPriority::of(name : String) -&gt; PlanEntryPriority?</code></div><div class="doc"><p>The priority with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-72"><div class="signature"><span class="kind function">fn</span><code>fn PlanEntryStatus::to_string(self : PlanEntryStatus) -&gt; String</code></div><div class="doc"><p>The name the status travels as.</p></div></article>
-<article class="item" id="moonacp-73"><div class="signature"><span class="kind function">fn</span><code>fn PlanEntryStatus::of(name : String) -&gt; PlanEntryStatus?</code></div><div class="doc"><p>The status with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-73"><div class="signature"><span class="kind function">fn</span><code>fn PlanEntryStatus::of(name : String) -&gt; PlanEntryStatus?</code></div><div class="doc"><p>The status with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-74"><div class="signature"><span class="kind function">fn</span><code>fn Severity::to_string(self : Severity) -&gt; String</code></div><div class="doc"><p>The name the severity travels as.</p></div></article>
 <article class="item" id="moonacp-75"><div class="signature"><span class="kind function">fn</span><code>fn Severity::of(name : String) -&gt; Severity</code></div><div class="doc"><p>The severity with that name; unknown names are kept as they came.</p></div></article>
 <article class="item" id="moonacp-76"><div class="signature"><span class="kind function">fn</span><code>fn CompactionStatus::to_string(self : CompactionStatus) -&gt; String</code></div><div class="doc"><p>The name the state travels as.</p></div></article>
 <article class="item" id="moonacp-77"><div class="signature"><span class="kind function">fn</span><code>fn CompactionStatus::of(name : String) -&gt; CompactionStatus</code></div><div class="doc"><p>The state with that name; unknown names are kept as they came.</p></div></article>
 <article class="item" id="moonacp-78"><div class="signature"><span class="kind function">fn</span><code>fn ToolKind::to_string(self : ToolKind) -&gt; String</code></div><div class="doc"><p>The name the kind travels as.</p></div></article>
-<article class="item" id="moonacp-79"><div class="signature"><span class="kind function">fn</span><code>fn ToolKind::of(name : String) -&gt; ToolKind?</code></div><div class="doc"><p>The kind with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-79"><div class="signature"><span class="kind function">fn</span><code>fn ToolKind::of(name : String) -&gt; ToolKind?</code></div><div class="doc"><p>The kind with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-80"><div class="signature"><span class="kind function">fn</span><code>fn ToolCallStatus::to_string(self : ToolCallStatus) -&gt; String</code></div><div class="doc"><p>The name the status travels as.</p></div></article>
-<article class="item" id="moonacp-81"><div class="signature"><span class="kind function">fn</span><code>fn ToolCallStatus::of(name : String) -&gt; ToolCallStatus?</code></div><div class="doc"><p>The status with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-81"><div class="signature"><span class="kind function">fn</span><code>fn ToolCallStatus::of(name : String) -&gt; ToolCallStatus?</code></div><div class="doc"><p>The status with that name, or <code>None</code>.</p></div></article>
 <article class="item" id="moonacp-82"><div class="signature"><span class="kind function">fn</span><code>fn PermissionOptionKind::to_string(self : PermissionOptionKind) -&gt; String</code></div><div class="doc"><p>The name the option kind travels as.</p></div></article>
-<article class="item" id="moonacp-83"><div class="signature"><span class="kind function">fn</span><code>fn PermissionOptionKind::of(name : String) -&gt; PermissionOptionKind?</code></div><div class="doc"><p>The option kind with that name, or `None`.</p></div></article>
+<article class="item" id="moonacp-83"><div class="signature"><span class="kind function">fn</span><code>fn PermissionOptionKind::of(name : String) -&gt; PermissionOptionKind?</code></div><div class="doc"><p>The option kind with that name, or <code>None</code>.</p></div></article>
 <h3 class="group">Errors</h3>
 <article class="item" id="moonacp-85"><div class="signature"><span class="kind error">error</span><code>(all) suberror Refused</code></div><div class="doc"><p>What a handler raises, and what the other side&#x27;s error object becomes when a call fails. A
-variant&#x27;s code is the JSON-RPC code it travels as: `Refused(code~, ..)` carries the wire code
-itself, `Unsupported` is -32601, `Malformed` is -32602.</p></div></article>
+variant&#x27;s code is the JSON-RPC code it travels as: <code>Refused(code~, ..)</code> carries the wire code
+itself, <code>Unsupported</code> is -32601, <code>Malformed</code> is -32602.</p></div></article>
 <h3 class="group">Types and methods</h3>
 <article class="item" id="moonacp-87"><div class="signature"><span class="kind struct">type</span><code>(all) struct PromptCapabilities</code></div><div class="doc"><p>Content kinds the agent accepts inside a prompt.</p></div></article>
 <article class="item" id="moonacp-88"><div class="signature"><span class="kind struct">type</span><code>(all) struct McpCapabilities</code></div><div class="doc"><p>MCP transports the agent can connect to.</p></div></article>
-<article class="item" id="moonacp-89"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionCapabilities</code></div><div class="doc"><p>Session methods beyond `session/new`. Each flag is a promise to answer that method.</p></div></article>
+<article class="item" id="moonacp-89"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionCapabilities</code></div><div class="doc"><p>Session methods beyond <code>session/new</code>. Each flag is a promise to answer that method.</p></div></article>
 <article class="item" id="moonacp-90"><div class="signature"><span class="kind struct">type</span><code>(all) struct AgentAuthCapabilities</code></div><div class="doc"><p>Authentication the agent offers.</p></div></article>
-<article class="item" id="moonacp-91"><div class="signature"><span class="kind struct">type</span><code>(all) struct AgentCapabilities</code></div><div class="doc"><p>Everything the agent says it can do, sent back from `initialize`.</p></div></article>
+<article class="item" id="moonacp-91"><div class="signature"><span class="kind struct">type</span><code>(all) struct AgentCapabilities</code></div><div class="doc"><p>Everything the agent says it can do, sent back from <code>initialize</code>.</p></div></article>
 <article class="item" id="moonacp-92"><div class="signature"><span class="kind struct">type</span><code>(all) struct FileSystemCapabilities</code></div><div class="doc"><p>Files the client lets the agent read and write on its behalf.</p></div></article>
 <article class="item" id="moonacp-93"><div class="signature"><span class="kind struct">type</span><code>(all) struct ClientAuthCapabilities</code></div><div class="doc"><p>Whether the client runs terminal commands for the agent.</p></div></article>
 <article class="item" id="moonacp-94"><div class="signature"><span class="kind struct">type</span><code>(all) struct ClientSessionCapabilities</code></div><div class="doc"><p>The client&#x27;s support for supplementary session features.</p></div></article>
 <article class="item" id="moonacp-95"><div class="signature"><span class="kind struct">type</span><code>(all) struct ElicitationCapabilities</code></div><div class="doc"><p>Elicitation kinds the client can show.</p></div></article>
-<article class="item" id="moonacp-96"><div class="signature"><span class="kind struct">type</span><code>(all) struct ClientCapabilities</code></div><div class="doc"><p>Everything the client says it can do, sent with `initialize`.</p></div></article>
+<article class="item" id="moonacp-96"><div class="signature"><span class="kind struct">type</span><code>(all) struct ClientCapabilities</code></div><div class="doc"><p>Everything the client says it can do, sent with <code>initialize</code>.</p></div></article>
 <article class="item" id="moonacp-97"><div class="signature"><span class="kind struct">type</span><code>(all) struct Implementation</code></div><div class="doc"><p>A name and version, for the log and the about box.</p></div></article>
-<article class="item" id="moonacp-98"><div class="signature"><span class="kind enum">type</span><code>(all) enum AuthMethod</code></div><div class="doc"><p>An authentication method the agent offers, one of two shapes tagged by `type` on the wire; the
+<article class="item" id="moonacp-98"><div class="signature"><span class="kind enum">type</span><code>(all) enum AuthMethod</code></div><div class="doc"><p>An authentication method the agent offers, one of two shapes tagged by <code>type</code> on the wire; the
 agent-driven one carries no tag.</p></div></article>
 <article class="item" id="moonacp-99"><div class="signature"><span class="kind struct">type</span><code>(all) struct AuthMethodTerminal</code></div><div class="doc"><p>The client runs a command to authenticate.</p></div></article>
-<article class="item" id="moonacp-100"><div class="signature"><span class="kind struct">type</span><code>(all) struct AuthMethodAgent</code></div><div class="doc"><p>The agent runs the flow itself once `authenticate` is called.</p></div></article>
+<article class="item" id="moonacp-100"><div class="signature"><span class="kind struct">type</span><code>(all) struct AuthMethodAgent</code></div><div class="doc"><p>The agent runs the flow itself once <code>authenticate</code> is called.</p></div></article>
 <article class="item" id="moonacp-101"><div class="signature"><span class="kind struct">type</span><code>(all) struct ReadTextFile</code></div><div class="doc"><p>A text file to read.</p></div></article>
 <article class="item" id="moonacp-102"><div class="signature"><span class="kind struct">type</span><code>(all) struct FileText</code></div><div class="doc"><p>What a read returns.</p></div></article>
 <article class="item" id="moonacp-103"><div class="signature"><span class="kind struct">type</span><code>(all) struct WriteTextFile</code></div><div class="doc"><p>A text file to write, whole.</p></div></article>
 <article class="item" id="moonacp-104"><div class="signature"><span class="kind struct">type</span><code>(all) struct TerminalCommand</code></div><div class="doc"><p>A command to run in a new terminal.</p></div></article>
 <article class="item" id="moonacp-105"><div class="signature"><span class="kind struct">type</span><code>(all) struct TerminalOpened</code></div><div class="doc"><p>The identifier of the terminal the client opened.</p></div></article>
-<article class="item" id="moonacp-106"><div class="signature"><span class="kind struct">type</span><code>(all) struct TerminalRequest</code></div><div class="doc"><p>Names an existing terminal, for `terminal/output`, `terminal/wait_for_exit`, `terminal/kill` and
-`terminal/release`.</p></div></article>
+<article class="item" id="moonacp-106"><div class="signature"><span class="kind struct">type</span><code>(all) struct TerminalRequest</code></div><div class="doc"><p>Names an existing terminal, for <code>terminal/output</code>, <code>terminal/wait_for_exit</code>, <code>terminal/kill</code> and
+<code>terminal/release</code>.</p></div></article>
 <article class="item" id="moonacp-107"><div class="signature"><span class="kind struct">type</span><code>(all) struct ExitStatus</code></div><div class="doc"><p>How a command ended.</p></div></article>
 <article class="item" id="moonacp-108"><div class="signature"><span class="kind struct">type</span><code>(all) struct TerminalOutput</code></div><div class="doc"><p>What a terminal has printed so far, and whether it has exited.</p></div></article>
 <article class="item" id="moonacp-109"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionMode</code></div><div class="doc"><p>One mode the agent can work in.</p></div></article>
@@ -173,28 +190,28 @@ agent-driven one carries no tag.</p></div></article>
 <article class="item" id="moonacp-112"><div class="signature"><span class="kind struct">type</span><code>(all) struct ConfigChoice</code></div><div class="doc"><p>One value of a dropdown.</p></div></article>
 <article class="item" id="moonacp-113"><div class="signature"><span class="kind struct">type</span><code>(all) struct ConfigGroup</code></div><div class="doc"><p>Choices under a heading.</p></div></article>
 <article class="item" id="moonacp-114"><div class="signature"><span class="kind enum">type</span><code>(all) enum ConfigChoices</code></div><div class="doc"><p>The choices of a dropdown, flat or grouped. The two are told apart by whether the first entry
-carries `group`.</p></div></article>
+carries <code>group</code>.</p></div></article>
 <article class="item" id="moonacp-115"><div class="signature"><span class="kind enum">type</span><code>(all) enum ConfigValue</code></div><div class="doc"><p>What a configuration option holds: a picked value or a switch.</p></div></article>
 <article class="item" id="moonacp-116"><div class="signature"><span class="kind struct">type</span><code>(all) struct ConfigOption</code></div><div class="doc"><p>One entry of the session configuration picker.</p></div></article>
-<article class="item" id="moonacp-117"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionStarted</code></div><div class="doc"><p>What `session/new` and its siblings answer with.</p></div></article>
+<article class="item" id="moonacp-117"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionStarted</code></div><div class="doc"><p>What <code>session/new</code> and its siblings answer with.</p></div></article>
 <article class="item" id="moonacp-118"><div class="signature"><span class="kind struct">type</span><code>(all) struct SetConfigOptions</code></div><div class="doc"><p>The whole option list after one of them changed.</p></div></article>
-<article class="item" id="moonacp-119"><div class="signature"><span class="kind struct">type</span><code>struct Conn</code></div><div class="doc"><p>A connection to an agent, from the editor&#x27;s side. `run` takes messages in; the methods here send
+<article class="item" id="moonacp-119"><div class="signature"><span class="kind struct">type</span><code>struct Conn</code></div><div class="doc"><p>A connection to an agent, from the editor&#x27;s side. <code>run</code> takes messages in; the methods here send
 them out and wait for their answers.</p></div></article>
 <article class="item" id="moonacp-120"><div class="signature"><span class="kind enum">type</span><code>(all) enum Role</code></div><div class="doc"><p>Who a piece of content is for.</p></div></article>
 <article class="item" id="moonacp-121"><div class="signature"><span class="kind struct">type</span><code>(all) struct Annotations</code></div><div class="doc"><p>Hints for how a client shows a piece of content.</p></div></article>
 <article class="item" id="moonacp-122"><div class="signature"><span class="kind struct">type</span><code>(all) struct TextContent</code></div><div class="doc"><p>Text the model reads or writes.</p></div></article>
-<article class="item" id="moonacp-123"><div class="signature"><span class="kind struct">type</span><code>(all) struct ImageContent</code></div><div class="doc"><p>An image, base64 in `data`.</p></div></article>
-<article class="item" id="moonacp-124"><div class="signature"><span class="kind struct">type</span><code>(all) struct AudioContent</code></div><div class="doc"><p>Audio, base64 in `data`.</p></div></article>
+<article class="item" id="moonacp-123"><div class="signature"><span class="kind struct">type</span><code>(all) struct ImageContent</code></div><div class="doc"><p>An image, base64 in <code>data</code>.</p></div></article>
+<article class="item" id="moonacp-124"><div class="signature"><span class="kind struct">type</span><code>(all) struct AudioContent</code></div><div class="doc"><p>Audio, base64 in <code>data</code>.</p></div></article>
 <article class="item" id="moonacp-125"><div class="signature"><span class="kind struct">type</span><code>(all) struct ResourceLink</code></div><div class="doc"><p>A resource the client can read, named by URI rather than by value.</p></div></article>
 <article class="item" id="moonacp-126"><div class="signature"><span class="kind struct">type</span><code>(all) struct TextResource</code></div><div class="doc"><p>Resource contents carried as text.</p></div></article>
-<article class="item" id="moonacp-127"><div class="signature"><span class="kind struct">type</span><code>(all) struct BlobResource</code></div><div class="doc"><p>Resource contents carried as base64 in `blob`.</p></div></article>
-<article class="item" id="moonacp-128"><div class="signature"><span class="kind enum">type</span><code>(all) enum Resource</code></div><div class="doc"><p>Either kind of embedded resource contents, told apart by `text` against `blob`.</p></div></article>
+<article class="item" id="moonacp-127"><div class="signature"><span class="kind struct">type</span><code>(all) struct BlobResource</code></div><div class="doc"><p>Resource contents carried as base64 in <code>blob</code>.</p></div></article>
+<article class="item" id="moonacp-128"><div class="signature"><span class="kind enum">type</span><code>(all) enum Resource</code></div><div class="doc"><p>Either kind of embedded resource contents, told apart by <code>text</code> against <code>blob</code>.</p></div></article>
 <article class="item" id="moonacp-129"><div class="signature"><span class="kind struct">type</span><code>(all) struct EmbeddedResource</code></div><div class="doc"><p>A resource carried by value inside a message.</p></div></article>
-<article class="item" id="moonacp-130"><div class="signature"><span class="kind enum">type</span><code>(all) enum ContentBlock</code></div><div class="doc"><p>One displayable piece of a prompt or of a tool&#x27;s output, tagged by `type` on the wire.</p></div></article>
+<article class="item" id="moonacp-130"><div class="signature"><span class="kind enum">type</span><code>(all) enum ContentBlock</code></div><div class="doc"><p>One displayable piece of a prompt or of a tool&#x27;s output, tagged by <code>type</code> on the wire.</p></div></article>
 <article class="item" id="moonacp-131"><div class="signature"><span class="kind struct">type</span><code>(all) struct Content</code></div><div class="doc"><p>A standard content block wrapped for a tool call&#x27;s output.</p></div></article>
 <article class="item" id="moonacp-132"><div class="signature"><span class="kind struct">type</span><code>(all) struct Diff</code></div><div class="doc"><p>A file edit, given as the whole file before and after.</p></div></article>
 <article class="item" id="moonacp-133"><div class="signature"><span class="kind struct">type</span><code>(all) struct TerminalRef</code></div><div class="doc"><p>A reference to a terminal the client opened, embedded in a tool call.</p></div></article>
-<article class="item" id="moonacp-134"><div class="signature"><span class="kind enum">type</span><code>(all) enum ToolCallContent</code></div><div class="doc"><p>What a tool call produced, tagged by `type` on the wire.</p></div></article>
+<article class="item" id="moonacp-134"><div class="signature"><span class="kind enum">type</span><code>(all) enum ToolCallContent</code></div><div class="doc"><p>What a tool call produced, tagged by <code>type</code> on the wire.</p></div></article>
 <article class="item" id="moonacp-135"><div class="signature"><span class="kind struct">type</span><code>(all) struct ToolCallLocation</code></div><div class="doc"><p>A place in the workspace a tool touched.</p></div></article>
 <article class="item" id="moonacp-136"><div class="signature"><span class="kind enum">type</span><code>(all) enum StringFormat</code></div><div class="doc"><p>A string field&#x27;s format hint.</p></div></article>
 <article class="item" id="moonacp-137"><div class="signature"><span class="kind struct">type</span><code>(all) struct EnumOption</code></div><div class="doc"><p>One titled choice of a string field.</p></div></article>
@@ -204,45 +221,45 @@ them out and wait for their answers.</p></div></article>
 <article class="item" id="moonacp-141"><div class="signature"><span class="kind struct">type</span><code>(all) struct BooleanField</code></div><div class="doc"><p>A field for yes or no.</p></div></article>
 <article class="item" id="moonacp-142"><div class="signature"><span class="kind enum">type</span><code>(all) enum ChoiceItems</code></div><div class="doc"><p>What a multi-select offers: bare values or titled ones.</p></div></article>
 <article class="item" id="moonacp-143"><div class="signature"><span class="kind struct">type</span><code>(all) struct MultiSelectField</code></div><div class="doc"><p>A field for picking several of a set.</p></div></article>
-<article class="item" id="moonacp-144"><div class="signature"><span class="kind enum">type</span><code>(all) enum Field</code></div><div class="doc"><p>One field of a form, tagged by `type` on the wire. A kind the protocol does not define yet is
+<article class="item" id="moonacp-144"><div class="signature"><span class="kind enum">type</span><code>(all) enum Field</code></div><div class="doc"><p>One field of a form, tagged by <code>type</code> on the wire. A kind the protocol does not define yet is
 kept as it came so a client can still show it.</p></div></article>
 <article class="item" id="moonacp-145"><div class="signature"><span class="kind struct">type</span><code>(all) struct ElicitationSchema</code></div><div class="doc"><p>The form to render.</p></div></article>
 <article class="item" id="moonacp-146"><div class="signature"><span class="kind enum">type</span><code>(all) enum ElicitScope</code></div><div class="doc"><p>Which request an elicitation belongs to: a session&#x27;s turn, or a bare JSON-RPC request.</p></div></article>
 <article class="item" id="moonacp-147"><div class="signature"><span class="kind struct">type</span><code>(all) struct FormRequest</code></div><div class="doc"><p>A form for the user to fill in.</p></div></article>
 <article class="item" id="moonacp-148"><div class="signature"><span class="kind struct">type</span><code>(all) struct UrlRequest</code></div><div class="doc"><p>A link the user follows.</p></div></article>
-<article class="item" id="moonacp-149"><div class="signature"><span class="kind enum">type</span><code>(all) enum Elicitation</code></div><div class="doc"><p>An ask, tagged by `mode` on the wire.</p></div></article>
-<article class="item" id="moonacp-150"><div class="signature"><span class="kind enum">type</span><code>(all) enum Answer</code></div><div class="doc"><p>What the user did with the ask. `content` holds one value per field, of whatever type the field
+<article class="item" id="moonacp-149"><div class="signature"><span class="kind enum">type</span><code>(all) enum Elicitation</code></div><div class="doc"><p>An ask, tagged by <code>mode</code> on the wire.</p></div></article>
+<article class="item" id="moonacp-150"><div class="signature"><span class="kind enum">type</span><code>(all) enum Answer</code></div><div class="doc"><p>What the user did with the ask. <code>content</code> holds one value per field, of whatever type the field
 asked for, so it stays raw.</p></div></article>
 <article class="item" id="moonacp-151"><div class="signature"><span class="kind struct">type</span><code>(all) struct HttpHeader</code></div><div class="doc"><p>One header sent to an MCP server.</p></div></article>
 <article class="item" id="moonacp-152"><div class="signature"><span class="kind struct">type</span><code>(all) struct EnvVariable</code></div><div class="doc"><p>One environment variable for a spawned MCP server.</p></div></article>
 <article class="item" id="moonacp-153"><div class="signature"><span class="kind struct">type</span><code>(all) struct McpHttp</code></div><div class="doc"><p>An MCP server reached over HTTP.</p></div></article>
 <article class="item" id="moonacp-154"><div class="signature"><span class="kind struct">type</span><code>(all) struct McpSse</code></div><div class="doc"><p>An MCP server reached over the older HTTP plus SSE transport.</p></div></article>
 <article class="item" id="moonacp-155"><div class="signature"><span class="kind struct">type</span><code>(all) struct McpStdio</code></div><div class="doc"><p>An MCP server the client is to launch as a child process.</p></div></article>
-<article class="item" id="moonacp-156"><div class="signature"><span class="kind enum">type</span><code>(all) enum McpServer</code></div><div class="doc"><p>An MCP server a session may use. The wire tells the two HTTP shapes apart by `type`; the stdio
+<article class="item" id="moonacp-156"><div class="signature"><span class="kind enum">type</span><code>(all) enum McpServer</code></div><div class="doc"><p>An MCP server a session may use. The wire tells the two HTTP shapes apart by <code>type</code>; the stdio
 shape carries no tag at all.</p></div></article>
 <article class="item" id="moonacp-157"><div class="signature"><span class="kind struct">type</span><code>(all) struct Initialize</code></div><div class="doc"><p>Opens the conversation: versions and capabilities, once per connection.</p></div></article>
-<article class="item" id="moonacp-158"><div class="signature"><span class="kind struct">type</span><code>(all) struct Initialized</code></div><div class="doc"><p>The answer to `initialize`.</p></div></article>
-<article class="item" id="moonacp-159"><div class="signature"><span class="kind struct">type</span><code>(all) struct Authenticate</code></div><div class="doc"><p>Names one of the methods from `initialize`.</p></div></article>
+<article class="item" id="moonacp-158"><div class="signature"><span class="kind struct">type</span><code>(all) struct Initialized</code></div><div class="doc"><p>The answer to <code>initialize</code>.</p></div></article>
+<article class="item" id="moonacp-159"><div class="signature"><span class="kind struct">type</span><code>(all) struct Authenticate</code></div><div class="doc"><p>Names one of the methods from <code>initialize</code>.</p></div></article>
 <article class="item" id="moonacp-160"><div class="signature"><span class="kind struct">type</span><code>(all) struct NewSession</code></div><div class="doc"><p>Starts a conversation. The working directory is where the agent reads and writes.</p></div></article>
 <article class="item" id="moonacp-161"><div class="signature"><span class="kind struct">type</span><code>(all) struct LoadSession</code></div><div class="doc"><p>Reopens a session and replays its history as updates.</p></div></article>
 <article class="item" id="moonacp-162"><div class="signature"><span class="kind struct">type</span><code>(all) struct ResumeSession</code></div><div class="doc"><p>Reattaches to a session without replaying its history.</p></div></article>
 <article class="item" id="moonacp-163"><div class="signature"><span class="kind struct">type</span><code>(all) struct ListSessions</code></div><div class="doc"><p>Asks for the sessions the agent remembers.</p></div></article>
-<article class="item" id="moonacp-164"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionInfo</code></div><div class="doc"><p>One row of `session/list`.</p></div></article>
+<article class="item" id="moonacp-164"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionInfo</code></div><div class="doc"><p>One row of <code>session/list</code>.</p></div></article>
 <article class="item" id="moonacp-165"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionList</code></div><div class="doc"><p>The page of sessions, and the cursor for the next one.</p></div></article>
-<article class="item" id="moonacp-166"><div class="signature"><span class="kind struct">type</span><code>(all) struct DeleteSession</code></div><div class="doc"><p>Removes a session from what `session/list` returns.</p></div></article>
+<article class="item" id="moonacp-166"><div class="signature"><span class="kind struct">type</span><code>(all) struct DeleteSession</code></div><div class="doc"><p>Removes a session from what <code>session/list</code> returns.</p></div></article>
 <article class="item" id="moonacp-167"><div class="signature"><span class="kind struct">type</span><code>(all) struct CloseSession</code></div><div class="doc"><p>Ends a session that is still running.</p></div></article>
 <article class="item" id="moonacp-168"><div class="signature"><span class="kind struct">type</span><code>(all) struct SetMode</code></div><div class="doc"><p>Picks a mode.</p></div></article>
 <article class="item" id="moonacp-169"><div class="signature"><span class="kind enum">type</span><code>(all) enum ConfigValueId</code></div><div class="doc"><p>Sets a configuration option. The wire has two shapes, a value id or a boolean, told apart by
-`type`.</p></div></article>
+<code>type</code>.</p></div></article>
 <article class="item" id="moonacp-170"><div class="signature"><span class="kind struct">type</span><code>(all) struct SetConfigOption</code></div><div class="doc"><p>Sets one configuration option.</p></div></article>
 <article class="item" id="moonacp-171"><div class="signature"><span class="kind struct">type</span><code>(all) struct Prompt</code></div><div class="doc"><p>One turn of the conversation.</p></div></article>
 <article class="item" id="moonacp-172"><div class="signature"><span class="kind enum">type</span><code>(all) enum StopReason</code></div><div class="doc"><p>Why the agent stopped.</p></div></article>
 <article class="item" id="moonacp-173"><div class="signature"><span class="kind struct">type</span><code>(all) struct PromptResult</code></div><div class="doc"><p>The answer to a prompt: why the turn ended.</p></div></article>
 <article class="item" id="moonacp-174"><div class="signature"><span class="kind struct">type</span><code>(all) struct Cancel</code></div><div class="doc"><p>Stops whatever turn is running in a session. A notification, so it is never answered.</p></div></article>
-<article class="item" id="moonacp-175"><div class="signature"><span class="kind struct">type</span><code>struct Session</code></div><div class="doc"><p>One session, as the agent sees it inside `prompt`. Everything here is a call to the client:
+<article class="item" id="moonacp-175"><div class="signature"><span class="kind struct">type</span><code>struct Session</code></div><div class="doc"><p>One session, as the agent sees it inside <code>prompt</code>. Everything here is a call to the client:
 updates, permission, files, terminals, elicitation.</p></div></article>
-<article class="item" id="moonacp-176"><div class="signature"><span class="kind struct">type</span><code>struct Terminal</code></div><div class="doc"><p>A command running in a terminal the client owns. Holding one is not owning a process: `release`
-hands the terminal back, and the exit status is only known after `wait`.</p></div></article>
+<article class="item" id="moonacp-176"><div class="signature"><span class="kind struct">type</span><code>struct Terminal</code></div><div class="doc"><p>A command running in a terminal the client owns. Holding one is not owning a process: <code>release</code>
+hands the terminal back, and the exit status is only known after <code>wait</code>.</p></div></article>
 <article class="item" id="moonacp-177"><div class="signature"><span class="kind struct">type</span><code>(all) struct ContentChunk</code></div><div class="doc"><p>One streamed item of content.</p></div></article>
 <article class="item" id="moonacp-178"><div class="signature"><span class="kind enum">type</span><code>(all) enum PlanEntryPriority</code></div><div class="doc"><p>How urgent a plan entry is.</p></div></article>
 <article class="item" id="moonacp-179"><div class="signature"><span class="kind enum">type</span><code>(all) enum PlanEntryStatus</code></div><div class="doc"><p>How far a plan entry got.</p></div></article>
@@ -260,7 +277,7 @@ hands the terminal back, and the exit status is only known after `wait`.</p></di
 <article class="item" id="moonacp-191"><div class="signature"><span class="kind enum">type</span><code>(all) enum CompactionStatus</code></div><div class="doc"><p>Where a context compaction got to. Unknown states are kept as they came.</p></div></article>
 <article class="item" id="moonacp-192"><div class="signature"><span class="kind struct">type</span><code>(all) struct Compaction</code></div><div class="doc"><p>A compaction, created the first time its identifier is seen and updated after that.</p></div></article>
 <article class="item" id="moonacp-193"><div class="signature"><span class="kind struct">type</span><code>(all) struct CompactionSummary</code></div><div class="doc"><p>One more block of a compaction&#x27;s retained summary.</p></div></article>
-<article class="item" id="moonacp-194"><div class="signature"><span class="kind enum">type</span><code>(all) enum SessionUpdate</code></div><div class="doc"><p>Everything the agent may tell the client mid-turn, tagged by `sessionUpdate` on the wire.</p></div></article>
+<article class="item" id="moonacp-194"><div class="signature"><span class="kind enum">type</span><code>(all) enum SessionUpdate</code></div><div class="doc"><p>Everything the agent may tell the client mid-turn, tagged by <code>sessionUpdate</code> on the wire.</p></div></article>
 <article class="item" id="moonacp-195"><div class="signature"><span class="kind struct">type</span><code>(all) struct SessionNotification</code></div><div class="doc"><p>One update as it travels: the session it belongs to and the update itself.</p></div></article>
 <article class="item" id="moonacp-196"><div class="signature"><span class="kind enum">type</span><code>(all) enum ToolKind</code></div><div class="doc"><p>What kind of thing a tool does, for a client that wants to pick an icon.</p></div></article>
 <article class="item" id="moonacp-197"><div class="signature"><span class="kind enum">type</span><code>(all) enum ToolCallStatus</code></div><div class="doc"><p>How far a tool call got.</p></div></article>
@@ -271,27 +288,27 @@ hands the terminal back, and the exit status is only known after `wait`.</p></di
 <article class="item" id="moonacp-202"><div class="signature"><span class="kind struct">type</span><code>(all) struct Permission</code></div><div class="doc"><p>The ask the agent makes: run this tool call, and here is what the user may choose.</p></div></article>
 <article class="item" id="moonacp-203"><div class="signature"><span class="kind enum">type</span><code>(all) enum Outcome</code></div><div class="doc"><p>What came back: one option chosen, or the ask dismissed.</p></div></article>
 <h3 class="group">Traits</h3>
-<article class="item" id="moonacp-205"><div class="signature"><span class="kind trait">trait</span><code>(open) trait Agent</code></div><div class="doc"><p>The agent side. Implement what the agent can do and leave the rest: `initialize` and
-`new_session` and `prompt` are the three every agent has, the others have defaults that report
+<article class="item" id="moonacp-205"><div class="signature"><span class="kind trait">trait</span><code>(open) trait Agent</code></div><div class="doc"><p>The agent side. Implement what the agent can do and leave the rest: <code>initialize</code> and
+<code>new_session</code> and <code>prompt</code> are the three every agent has, the others have defaults that report
 themselves as unsupported.</p></div></article>
-<article class="item" id="moonacp-206"><div class="signature"><span class="kind trait">trait</span><code>(open) trait Client</code></div><div class="doc"><p>The client side. `update` is the only method the protocol requires; the rest exist so the agent
+<article class="item" id="moonacp-206"><div class="signature"><span class="kind trait">trait</span><code>(open) trait Client</code></div><div class="doc"><p>The client side. <code>update</code> is the only method the protocol requires; the rest exist so the agent
 can ask for them, and a client that leaves one out answers -32601 when the agent asks.</p></div></article></section>
 <section class="package" id="moonacp-stdio"><h2><code>moonacp/stdio</code></h2><p class="blurb">Serving an agent on the process&#x27;s own streams.</p><h3 class="group">Values</h3>
 <article class="item" id="moonacp-stdio-1"><div class="signature"><span class="kind function">fn</span><code>fn serve_stdio(agent : &amp;@moonacp.Agent) -&gt; Unit</code></div><div class="doc"><p>Runs an agent on the process&#x27;s own stdin and stdout until the client closes stdin. This is the
 transport an editor uses when it launches an agent: one JSON-RPC message per line, nothing else
 on stdout, diagnostics on stderr.</p></div></article>
-<article class="item" id="moonacp-stdio-2"><div class="signature"><span class="kind function">fn</span><code>fn spawn( client : &amp;@moonacp.Client, command : Array[String], args? : Array[String], env? : Map[String, String], cwd? : StringView, ) -&gt; Child</code></div><div class="doc"><p>Starts `command` with `args` and connects to it as a client. The command is an absolute path or
-something the system can find on `PATH`; the first array element is the program.</p></div></article>
+<article class="item" id="moonacp-stdio-2"><div class="signature"><span class="kind function">fn</span><code>fn spawn( client : &amp;@moonacp.Client, command : Array[String], args? : Array[String], env? : Map[String, String], cwd? : StringView, ) -&gt; Child</code></div><div class="doc"><p>Starts <code>command</code> with <code>args</code> and connects to it as a client. The command is an absolute path or
+something the system can find on <code>PATH</code>; the first array element is the program.</p></div></article>
 <article class="item" id="moonacp-stdio-3"><div class="signature"><span class="kind function">fn</span><code>fn Child::conn(self : Child) -&gt; @moonacp.Conn</code></div><div class="doc"><p>The connection to the child, runnable and callable.</p></div></article>
 <article class="item" id="moonacp-stdio-4"><div class="signature"><span class="kind function">fn</span><code>fn Child::close(self : Child) -&gt; Unit</code></div><div class="doc"><p>Closes the child&#x27;s input, which is how an agent learns the client is done: it finishes what it
-is doing and exits. The read side ends with it, so a task blocked on `run` comes back.</p></div></article>
+is doing and exits. The read side ends with it, so a task blocked on <code>run</code> comes back.</p></div></article>
 <h3 class="group">Types and methods</h3>
 <article class="item" id="moonacp-stdio-6"><div class="signature"><span class="kind struct">type</span><code>struct Child</code></div><div class="doc"><p>A child process speaking the protocol on its pipes.</p></div></article></section>
 <section class="package" id="moonacp-asgi"><h2><code>moonacp/asgi</code></h2><p class="blurb">Serving an agent over HTTP streams and a WebSocket.</p><h3 class="group">Values</h3>
 <article class="item" id="moonacp-asgi-1"><div class="signature"><span class="kind function">fn</span><code>fn to_asgi( agent : &amp;@moonacp.Agent, path~ : String = &quot;/acp&quot;, hosts? : Array[String], limits~ : Limits = limits, ) -&gt; @moonasgi.AsgiApp</code></div><div class="doc"><p>Serves an agent over ASGI: one path, four verbs, and a WebSocket upgrade. Nothing is global, so
 several agents can be mounted side by side.</p></div></article>
 <article class="item" id="moonacp-asgi-2"><div class="signature"><span class="kind value">let</span><code>let limits : Limits =</code></div><div class="doc"><p>The defaults: 1 MiB bodies, 256 buffered messages per stream, a keepalive every 15 seconds, and
-half a minute for `initialize`.</p></div></article>
+half a minute for <code>initialize</code>.</p></div></article>
 <h3 class="group">Types and methods</h3>
 <article class="item" id="moonacp-asgi-4"><div class="signature"><span class="kind struct">type</span><code>(all) struct Limits</code></div><div class="doc"><p>The transport&#x27;s bounds.</p></div></article></section>
         <footer class="page">
@@ -305,6 +322,43 @@ half a minute for `initialize`.</p></div></article>
       const mark = () => root.classList.toggle("at-top", scrollY === 0);
       addEventListener("scroll", mark, { passive: true });
       mark();
+
+      // Day and night: a choice, once made, wins; until then the platform decides.
+      const toggle = document.querySelector(".theme-toggle");
+      const key = "moonacp-theme";
+      const platform = matchMedia("(prefers-color-scheme: dark)");
+      const read = () => {
+        try {
+          const saved = localStorage.getItem(key);
+          return saved === "light" || saved === "dark" ? saved : null;
+        } catch (error) {
+          return null;
+        }
+      };
+      const theme = () => read() || (platform.matches ? "dark" : "light");
+      const paint = () => {
+        const now = theme();
+        root.dataset.theme = now;
+        toggle.setAttribute("aria-pressed", String(now === "dark"));
+        toggle.setAttribute(
+          "aria-label",
+          now === "dark" ? "Switch to light theme" : "Switch to dark theme",
+        );
+      };
+      toggle.addEventListener("click", () => {
+        const next = theme() === "dark" ? "light" : "dark";
+        try {
+          localStorage.setItem(key, next);
+        } catch (error) {
+          // Not remembered, but this page still switches.
+        }
+        paint();
+      });
+      // A platform change only matters while no choice has been made.
+      platform.addEventListener("change", () => {
+        if (!read()) paint();
+      });
+      paint();
     </script>
   </body>
 </html>

@@ -148,6 +148,11 @@ def kind_of(text: str) -> str:
     return "function"
 
 
+def inline_markup(text: str) -> str:
+    """Documentation prose: escaped, with `code` spans turned into real ones."""
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", html.escape(text))
+
+
 KIND_LABEL = {
     "trait": ("trait", "trait"),
     "error": ("error", "error"),
@@ -193,7 +198,7 @@ def render(api_doc: str) -> str:
                 doc = ""
                 if item["doc"]:
                     paragraphs = [
-                        f"<p>{html.escape(paragraph)}</p>"
+                        f"<p>{inline_markup(paragraph)}</p>"
                         for paragraph in item["doc"].split("\n\n")
                         if paragraph.strip()
                     ]

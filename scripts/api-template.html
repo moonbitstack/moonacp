@@ -8,19 +8,36 @@
       name="description"
       content="Every public function, type and trait of moonacp, the Agent Client Protocol for MoonBit."
     />
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="site.css" />
+    <script>
+      // Runs before the first paint, so a chosen theme never flashes the other one.
+      try {
+        const saved = localStorage.getItem("moonacp-theme");
+        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+      } catch (error) {
+        // Storage is off; the platform's own preference still applies.
+      }
+    </script>
   </head>
   <body>
     <div class="shell">
       <aside class="side">
         <div class="brand">
-          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-            <rect x="1" y="1" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.6" />
-            <path d="M6 8.5 9 11l-3 2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            <path d="M12 13.5h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-          </svg>
           <span>moonacp<small>Agent Client Protocol</small></span>
+          <button
+            class="theme-toggle"
+            type="button"
+            aria-label="Switch to dark theme"
+            aria-pressed="false"
+          >
+            <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <circle cx="8" cy="8" r="3.1" />
+              <path d="M8 1.4v1.7M8 12.9v1.7M1.4 8h1.7M12.9 8h1.7M3.3 3.3l1.2 1.2M11.5 11.5l1.2 1.2M12.7 3.3l-1.2 1.2M4.5 11.5l-1.2 1.2" stroke-linecap="round" />
+            </svg>
+            <svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M13.4 9.9A5.7 5.7 0 0 1 6.1 2.6a5.7 5.7 0 1 0 7.3 7.3Z" stroke-linejoin="round" />
+            </svg>
+          </button>
         </div>
         <nav>
           <p>Start</p>
@@ -51,6 +68,43 @@
       const mark = () => root.classList.toggle("at-top", scrollY === 0);
       addEventListener("scroll", mark, { passive: true });
       mark();
+
+      // Day and night: a choice, once made, wins; until then the platform decides.
+      const toggle = document.querySelector(".theme-toggle");
+      const key = "moonacp-theme";
+      const platform = matchMedia("(prefers-color-scheme: dark)");
+      const read = () => {
+        try {
+          const saved = localStorage.getItem(key);
+          return saved === "light" || saved === "dark" ? saved : null;
+        } catch (error) {
+          return null;
+        }
+      };
+      const theme = () => read() || (platform.matches ? "dark" : "light");
+      const paint = () => {
+        const now = theme();
+        root.dataset.theme = now;
+        toggle.setAttribute("aria-pressed", String(now === "dark"));
+        toggle.setAttribute(
+          "aria-label",
+          now === "dark" ? "Switch to light theme" : "Switch to dark theme",
+        );
+      };
+      toggle.addEventListener("click", () => {
+        const next = theme() === "dark" ? "light" : "dark";
+        try {
+          localStorage.setItem(key, next);
+        } catch (error) {
+          // Not remembered, but this page still switches.
+        }
+        paint();
+      });
+      // A platform change only matters while no choice has been made.
+      platform.addEventListener("change", () => {
+        if (!read()) paint();
+      });
+      paint();
     </script>
   </body>
 </html>
