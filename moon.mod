@@ -48,7 +48,7 @@ import {
   "moonbitlang/async@0.22.5",
   "moonbitstack/moonjrpc@0.1.3",
   "moonbitstack/moonasgi@0.10.6",
-  "moonbitstack/moonfetch@0.1.5",
+  "moonbitstack/moonfetch@0.1.6",
   "moonbitstack/moonjson@0.4.3",
-  "moonbitstack/moonnet@0.1.10",
+  "moonbitstack/moonnet@0.1.11",
 }
