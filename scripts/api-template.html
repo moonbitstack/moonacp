@@ -10,12 +10,19 @@
     />
     <link rel="stylesheet" href="site.css" />
     <script>
-      // Runs before the first paint, so a chosen theme never flashes the other one.
+      // Runs before the first paint: a chosen theme, and columns dragged to a size, are restored
+      // here so neither flashes at the size the page was born with.
       try {
-        const saved = localStorage.getItem("moonacp-theme");
-        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+        const theme = localStorage.getItem("moonacp-theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        for (const side of ["nav", "rail"]) {
+          const width = Number(localStorage.getItem(`moonacp-${side}-w`));
+          if (Number.isFinite(width) && width >= 160 && width <= 600) {
+            document.documentElement.style.setProperty(`--${side}-w`, `${width}px`);
+          }
+        }
       } catch (error) {
-        // Storage is off; the platform's own preference still applies.
+        // Storage is off; the platform's own preference, and the default widths, still apply.
       }
     </script>
   </head>
@@ -28,6 +35,7 @@
             class="theme-toggle"
             type="button"
             aria-label="Switch to dark theme"
+            title="Click to switch, double-click to follow the system"
             aria-pressed="false"
           >
             <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -49,6 +57,19 @@
         </nav>
         <footer>Schema v1.29.1. Transport RFD of 2026-11-04.</footer>
       </aside>
+      <div
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize the sidebar"
+        title="Drag to resize, double-click to reset"
+        aria-valuemin="184"
+        aria-valuemax="380"
+        aria-valuenow="244"
+        data-resize="nav"
+        tabindex="0"
+      ></div>
+
       <main>
         <span class="eyebrow">Reference</span>
         <h1>API reference</h1>
@@ -63,6 +84,19 @@
         </footer>
       </main>
 
+      <div
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize the margin column"
+        title="Drag to resize, double-click to reset"
+        aria-valuemin="232"
+        aria-valuemax="460"
+        aria-valuenow="304"
+        data-resize="rail"
+        tabindex="0"
+      ></div>
+
       <aside class="rail outline" aria-label="On this page">
         <div>
           <h4>On this page</h4>
@@ -72,48 +106,6 @@
         </div>
       </aside>
     </div>
-    <script>
-      const root = document.documentElement;
-      const mark = () => root.classList.toggle("at-top", scrollY === 0);
-      addEventListener("scroll", mark, { passive: true });
-      mark();
-
-      // Day and night: a choice, once made, wins; until then the platform decides.
-      const toggle = document.querySelector(".theme-toggle");
-      const key = "moonacp-theme";
-      const platform = matchMedia("(prefers-color-scheme: dark)");
-      const read = () => {
-        try {
-          const saved = localStorage.getItem(key);
-          return saved === "light" || saved === "dark" ? saved : null;
-        } catch (error) {
-          return null;
-        }
-      };
-      const theme = () => read() || (platform.matches ? "dark" : "light");
-      const paint = () => {
-        const now = theme();
-        root.dataset.theme = now;
-        toggle.setAttribute("aria-pressed", String(now === "dark"));
-        toggle.setAttribute(
-          "aria-label",
-          now === "dark" ? "Switch to light theme" : "Switch to dark theme",
-        );
-      };
-      toggle.addEventListener("click", () => {
-        const next = theme() === "dark" ? "light" : "dark";
-        try {
-          localStorage.setItem(key, next);
-        } catch (error) {
-          // Not remembered, but this page still switches.
-        }
-        paint();
-      });
-      // A platform change only matters while no choice has been made.
-      platform.addEventListener("change", () => {
-        if (!read()) paint();
-      });
-      paint();
-    </script>
+    <script src="site.js" defer></script>
   </body>
 </html>

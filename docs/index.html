@@ -10,12 +10,19 @@
     />
     <link rel="stylesheet" href="site.css" />
     <script>
-      // Runs before the first paint, so a chosen theme never flashes the other one.
+      // Runs before the first paint: a chosen theme, and columns dragged to a size, are restored
+      // here so neither flashes at the size the page was born with.
       try {
-        const saved = localStorage.getItem("moonacp-theme");
-        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+        const theme = localStorage.getItem("moonacp-theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        for (const side of ["nav", "rail"]) {
+          const width = Number(localStorage.getItem(`moonacp-${side}-w`));
+          if (Number.isFinite(width) && width >= 160 && width <= 600) {
+            document.documentElement.style.setProperty(`--${side}-w`, `${width}px`);
+          }
+        }
       } catch (error) {
-        // Storage is off; the platform's own preference still applies.
+        // Storage is off; the platform's own preference, and the default widths, still apply.
       }
     </script>
   </head>
@@ -28,6 +35,7 @@
             class="theme-toggle"
             type="button"
             aria-label="Switch to dark theme"
+            title="Click to switch, double-click to follow the system"
             aria-pressed="false"
           >
             <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -55,6 +63,19 @@
           Transport RFD of 2026-11-04.
         </footer>
       </aside>
+
+      <div
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize the sidebar"
+        title="Drag to resize, double-click to reset"
+        aria-valuemin="184"
+        aria-valuemax="380"
+        aria-valuenow="244"
+        data-resize="nav"
+        tabindex="0"
+      ></div>
 
       <main id="top">
         <span class="eyebrow">Protocol library · MoonBit</span>
@@ -279,6 +300,19 @@ let conn = child.conn()
         </footer>
       </main>
 
+      <div
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize the margin column"
+        title="Drag to resize, double-click to reset"
+        aria-valuemin="232"
+        aria-valuemax="460"
+        aria-valuenow="304"
+        data-resize="rail"
+        tabindex="0"
+      ></div>
+
       <aside class="rail wire" aria-label="The wire, and what is on this page">
         <div class="panel">
           <div class="panel-head">
@@ -329,135 +363,6 @@ data: {"jsonrpc":"2.0","id":3,"result":{"stopReason":"end_turn"}}</code></pre>
       </aside>
     </div>
 
-    <script>
-      const root = document.documentElement;
-      const mark = () => root.classList.toggle("at-top", scrollY === 0);
-      addEventListener("scroll", mark, { passive: true });
-      mark();
-
-      // Day and night: a choice, once made, wins; until then the platform decides.
-      const toggle = document.querySelector(".theme-toggle");
-      const key = "moonacp-theme";
-      const platform = matchMedia("(prefers-color-scheme: dark)");
-      const read = () => {
-        try {
-          const saved = localStorage.getItem(key);
-          return saved === "light" || saved === "dark" ? saved : null;
-        } catch (error) {
-          return null;
-        }
-      };
-      const theme = () => read() || (platform.matches ? "dark" : "light");
-      const paint = () => {
-        const now = theme();
-        root.dataset.theme = now;
-        toggle.setAttribute("aria-pressed", String(now === "dark"));
-        toggle.setAttribute(
-          "aria-label",
-          now === "dark" ? "Switch to light theme" : "Switch to dark theme",
-        );
-      };
-      toggle.addEventListener("click", () => {
-        const next = theme() === "dark" ? "light" : "dark";
-        try {
-          localStorage.setItem(key, next);
-        } catch (error) {
-          // Not remembered, but this page still switches.
-        }
-        paint();
-      });
-      // A platform change only matters while no choice has been made.
-      platform.addEventListener("change", () => {
-        if (!read()) paint();
-      });
-      paint();
-
-      // The wire, told apart: keys, strings, numbers, literals. The panel is a sample, and a sample
-      // that is one colour of grey is a sample nobody reads.
-      const token = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?)|\b(true|false|null)\b/g;
-      const colour = (node) => {
-        const text = node.textContent;
-        node.textContent = "";
-        let at = 0;
-        for (const match of text.matchAll(token)) {
-          if (match.index > at) node.append(text.slice(at, match.index));
-          const span = document.createElement("span");
-          if (match[1] && match[2] !== undefined) {
-            span.className = "k";
-            span.textContent = match[1];
-            node.append(span, match[2]);
-          } else if (match[1]) {
-            span.className = "s";
-            span.textContent = match[1];
-            node.append(span);
-          } else if (match[3]) {
-            span.className = "n";
-            span.textContent = match[3];
-            node.append(span);
-          } else {
-            span.className = "b";
-            span.textContent = match[0];
-            node.append(span);
-          }
-          at = match.index + match[0].length;
-        }
-        node.append(text.slice(at));
-      };
-      for (const node of document.querySelectorAll(".rail.wire .what, .rail.wire .sample code")) {
-        colour(node);
-      }
-
-      // Two transports, one panel: the same turn over a pipe and over HTTP.
-      const tabs = [...document.querySelectorAll(".rail .tabs button")];
-      const views = [...document.querySelectorAll(".rail .view")];
-      for (const tab of tabs) {
-        tab.addEventListener("click", () => {
-          for (const other of tabs) {
-            other.setAttribute("aria-selected", String(other === tab));
-          }
-          for (const view of views) {
-            view.hidden = view.dataset.view !== tab.dataset.view;
-          }
-        });
-      }
-
-      // Copy what is on show, and say so, so the button never lies about what it did.
-      const copy = document.querySelector(".rail .copy");
-      if (copy) {
-        copy.addEventListener("click", async () => {
-          const shown = document.querySelector(".rail .view:not([hidden])");
-          try {
-            await navigator.clipboard.writeText(shown.innerText);
-            copy.textContent = "Copied";
-          } catch (error) {
-            copy.textContent = "Select it";
-          }
-          setTimeout(() => {
-            copy.textContent = "Copy";
-          }, 1400);
-        });
-      }
-
-      // The section you are reading is the one the sidebar shows.
-      const links = [...document.querySelectorAll(".side nav a[href^='#']")];
-      const sections = links
-        .map((link) => document.querySelector(link.getAttribute("href")))
-        .filter(Boolean);
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            for (const link of links) {
-              link.toggleAttribute(
-                "aria-current",
-                link.getAttribute("href") === "#" + entry.target.id,
-              );
-            }
-          }
-        },
-        { rootMargin: "-20% 0px -70% 0px" },
-      );
-      for (const section of sections) observer.observe(section);
-    </script>
+    <script src="site.js" defer></script>
   </body>
 </html>
