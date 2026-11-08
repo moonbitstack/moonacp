@@ -167,23 +167,50 @@ async fn main {
   }
   let required = arguments.length() > 1
   let (host, port) = host_and_port(address)
-  let transport = @grpc.GrpcTransport::connect(host~, port~)
-  // gRPC carries the binary encoding only, so the exporter is built for it.
-  let traces = @otlp.TraceExporter::new(
-    transport~,
-    endpoint="http://\{address}",
-    resource=@otlp.Resource::of_service("moonacp-example"),
-    scope=@otlp.Scope::new(name="moonbitstack/moonacp/otel"),
-    format=@otlp.BodyFormat::Protobuf,
-    now=millis,
-    rand=random_bytes,
-    attempts=if required { 5 } else { 1 },
-  )
-  let tracer = @trace.Tracer::new(
-    sink=traces,
-    rand=random_bytes,
-    sampler=@trace.always,
-  )
+  // A collector named on the command line is a promise that one is there; with none named the
+  // conversation still runs, and the spans go nowhere.
+  let connected : @grpc.GrpcTransport? = Some(
+    @grpc.GrpcTransport::connect(host~, port~),
+  ) catch {
+    error => {
+      if required {
+        abort("cannot reach a collector at \{address}: \{error}")
+      }
+      println("no collector at \{address} (\{error}); the spans are dropped")
+      None
+    }
+  }
+  let exporter = match connected {
+    None => None
+    // gRPC carries the binary encoding only, so the exporter is built for it.
+    Some(transport) =>
+      Some(
+        @otlp.TraceExporter::new(
+          transport~,
+          endpoint="http://\{address}",
+          resource=@otlp.Resource::of_service("moonacp-example"),
+          scope=@otlp.Scope::new(name="moonbitstack/moonacp/otel"),
+          format=@otlp.BodyFormat::Protobuf,
+          now=millis,
+          rand=random_bytes,
+          attempts=if required { 5 } else { 1 },
+        ),
+      )
+  }
+  let tracer = match exporter {
+    Some(exporter) =>
+      @trace.Tracer::new(
+        sink=exporter,
+        rand=random_bytes,
+        sampler=@trace.always,
+      )
+    None =>
+      @trace.Tracer::new(
+        sink=@trace.discard,
+        rand=random_bytes,
+        sampler=@trace.always,
+      )
+  }
   let agent = Notes::{ turns: 0, }
   let editor = Editor::{ answer: "", }
   let (agent_wire, client_wire) = wire()
@@ -246,12 +273,17 @@ async fn main {
     println("second turn: \{second}")
   })
   println("the editor read: \{editor.answer}")
-  let report = traces.flush()
-  transport.close()
-  println(
-    "OTLP/gRPC: delivered \{report.delivered}, rejected \{report.rejected}, dropped \{report.dropped}, requests \{report.attempts}",
-  )
-  if required && report.delivered == 0 {
-    abort("no span reached the collector at \{address}")
+  match (exporter, connected) {
+    (Some(exporter), Some(transport)) => {
+      let report = exporter.flush()
+      transport.close()
+      println(
+        "OTLP/gRPC: delivered \{report.delivered}, rejected \{report.rejected}, dropped \{report.dropped}, requests \{report.attempts}",
+      )
+      if required && report.delivered == 0 {
+        abort("no span reached the collector at \{address}")
+      }
+    }
+    _ => println("no spans were exported: this run had no collector")
   }
 }

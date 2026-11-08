@@ -71,6 +71,6 @@ jobs:
             fi
             sleep 1
           done
-          ./_build/native/debug/build/examples/04-otel/04-otel 127.0.0.1:4317
+          ./_build/native/debug/build/examples/04-otel/04-otel.exe 127.0.0.1:4317
           wait "$listener"
           cat "$RUNNER_TEMP/weaver.log"
