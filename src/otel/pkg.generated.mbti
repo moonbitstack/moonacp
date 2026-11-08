@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonacp/otel"
+
+import {
+  "moonbitstack/moonacp",
+  "moonbitstack/moontel/trace",
+}
+
+// Values
+pub let options : Options
+
+pub fn traced(&@moonacp.Agent, @trace.Tracer, options? : Options) -> &@moonacp.Agent
+
+pub fn traced_client(&@moonacp.Client, @trace.Tracer, options? : Options) -> &@moonacp.Client
+
+// Errors
+
+// Types and methods
+pub(all) struct Options {
+  agent_name : String
+  agent_version : String
+}
+
+// Type aliases
+
+// Traits

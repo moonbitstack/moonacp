@@ -37,6 +37,12 @@ keywords = [
   "protocol",
   "async",
   "server",
+  "opentelemetry",
+  "otel",
+  "tracing",
+  "telemetry",
+  "gen-ai",
+  "semantic-conventions",
   "moonbit",
 ]
 
@@ -51,4 +57,6 @@ import {
   "moonbitstack/moonfetch@0.1.6",
   "moonbitstack/moonjson@0.4.3",
   "moonbitstack/moonnet@0.1.11",
+  "moonbitstack/moonseed@0.1.1",
+  "moonbitstack/moontel@0.1.1",
 }

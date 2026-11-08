@@ -1,0 +1,27 @@
+// One traced conversation, exported to a collector over OTLP/gRPC:
+//
+//     moon run src/examples/04-otel --target native -- 127.0.0.1:4317
+//
+// The address is `host:port`, because that is what a channel connects to; the protocol puts the
+// gRPC port at 4317. With a collector named on the command line the program requires it to be
+// there and exits non-zero when nothing was delivered, which is what the telemetry job in CI runs.
+//
+// Both sides are traced: the agent's turn, the file the agent reads through the editor, and a turn
+// that fails, so the three spans and both statuses are in one trace.
+supported_targets = "+native"
+
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/aqueue",
+  "moonbitlang/core/env",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/otel",
+  "moonbitstack/moonjrpc/peer",
+  "moonbitstack/moonseed",
+  "moonbitstack/moonseed/system",
+  "moonbitstack/moontel/otlp",
+  "moonbitstack/moontel/otlp/grpc",
+  "moonbitstack/moontel/trace",
+}
+
+pkgtype(kind: "executable")
