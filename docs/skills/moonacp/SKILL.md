@@ -1,11 +1,12 @@
 ---
 name: moonacp
-description: Implement an editor-to-agent conversation with the Agent Client Protocol — serve an agent over stdio or ASGI, or drive one from an editor. Use when a MoonBit program has to run a coding agent behind an editor, or act as the editor calling one.
+description: Implement an editor-to-agent conversation with the Agent Client Protocol — serve an agent over stdio or ASGI, drive one from an editor, or trace either side. Use when a MoonBit program has to run a coding agent behind an editor, act as the editor calling one, or record what a turn did.
 ---
 
 # moonacp
 
-The Agent Client Protocol for MoonBit. Two contracts, one per side, and two transports.
+The Agent Client Protocol for MoonBit. Two contracts, one per side, two transports, and a wrapper
+that writes a trace of either side.
 
 ```
 moon add moonbitstack/moonacp
@@ -16,43 +17,64 @@ moon add moonbitstack/moonacp
 Implement `Agent`. Only `initialize`, `new_session` and `prompt` are required; the rest default to
 "unsupported", which is what the runtime answers with `-32601`.
 
-```moonbit
+```moonbit native
+struct Bot {
+  mut sessions : Int32
+}
+
+fn Bot::new() -> Bot {
+  { sessions: 0 }
+}
+
 impl @moonacp.Agent for Bot with fn initialize(self, request) {
   ignore(self)
   ignore(request)
   {
     ..@moonacp.Initialized::new(),
     capabilities: { ..@moonacp.AgentCapabilities::none(), load_session: true },
+    agent_info: Some(@moonacp.Implementation::new("bot", "0.1.0")),
   }
 }
 
 impl @moonacp.Agent for Bot with fn new_session(self, request) {
   ignore(request)
-  { session_id: "s-1", modes: None, config_options: None, meta: None }
+  self.sessions = self.sessions + 1
+  {
+    session_id: "s-\{self.sessions}",
+    modes: None,
+    config_options: None,
+    meta: None,
+  }
 }
 
 impl @moonacp.Agent for Bot with fn prompt(self, request, session) {
   ignore(request)
-  session.update(@moonacp.SessionUpdate::AgentMessageChunk({
-    content: @moonacp.ContentBlock::Text({ text: "hello", annotations: None, meta: None }),
-    message_id: None,
-    meta: None,
-  }))
+  session.update(
+    @moonacp.SessionUpdate::AgentMessageChunk({
+      content: @moonacp.ContentBlock::Text({
+        text: "hello",
+        annotations: None,
+        meta: None,
+      }),
+      message_id: None,
+      meta: None,
+    }),
+  )
   @moonacp.StopReason::EndTurn
 }
 ```
 
-Then pick a transport. stdio is what an editor uses when it launches the agent; ASGI is one endpoint
-carrying HTTP streams and a WebSocket.
+stdio is what an editor uses when it launches the agent:
 
-```moonbit
-async fn main {
-  @stdio.serve_stdio(Bot::new())
-}
+```moonbit native
+@stdio.serve_stdio(Bot::new())
 ```
 
-```moonbit
+ASGI is one endpoint carrying HTTP streams and a WebSocket, handed to any ASGI server:
+
+```moonbit native
 let app = @asgi.to_asgi(Bot::new(), path="/acp")
+ignore(app)
 ```
 
 ## Drive an agent
@@ -60,18 +82,44 @@ let app = @asgi.to_asgi(Bot::new(), path="/acp")
 Implement `Client` for what the editor answers — `update` and `request_permission` are the two that
 matter most — then run the connection in one task and call from another.
 
-```moonbit
-let child = @stdio.spawn(editor, ["my-agent", "--stdio"])
-let conn = child.conn()
-@async.with_task_group(async fn(group) {
-  group.spawn_bg(async fn() { conn.run() })
-  let answer = conn.prompt({
-    session_id: "s-1",
-    prompt: [@moonacp.ContentBlock::Text({ text: "hi", annotations: None, meta: None })],
-    meta: None,
+```moonbit native
+struct Screen {
+  mut text : String
+}
+
+impl @moonacp.Client for Screen with fn update(self, id, update) {
+  ignore(id)
+  if update is @moonacp.SessionUpdate::AgentMessageChunk(chunk) {
+    if chunk.content is @moonacp.ContentBlock::Text(content) {
+      self.text = self.text + content.text
+    }
+  }
+}
+
+impl @moonacp.Client for Screen with fn request_permission(self, ask) {
+  ignore(self)
+  match ask.options {
+    [] => @moonacp.Outcome::Cancelled
+    [first, ..] => @moonacp.Outcome::Selected(first.option_id)
+  }
+}
+
+async fn main {
+  let screen = Screen::{ text: "", }
+  let child = @stdio.spawn(screen, ["my-agent", "--stdio"])
+  let conn = child.conn()
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { conn.run() })
+    let answer = conn.prompt({
+      session_id: "s-1",
+      prompt: [
+        @moonacp.ContentBlock::Text({ text: "hi", annotations: None, meta: None }),
+      ],
+      meta: None,
+    })
+    println(answer.stop_reason.to_string())
   })
-  println(answer.stop_reason.to_string())
-})
+}
 ```
 
 ## Asking the user, and the things that can say no
@@ -80,25 +128,51 @@ let conn = child.conn()
 client may refuse. Ask only for what the client advertised in `initialize`; a client that did not
 advertise one answers `-32601` and the call raises.
 
-```moonbit
-let outcome = session.request_permission({
-  tool_call: {
-    tool_call_id: "c-1",
-    kind: Some(@moonacp.ToolKind::Edit),
-    status: Some(@moonacp.ToolCallStatus::Pending),
-    title: Some("write notes.md"),
-    name: None,
-    content: None,
-    locations: None,
-    raw_input: None,
-    raw_output: None,
+```moonbit native
+async fn approve(
+  session : @moonacp.Session,
+  call : @moonacp.ToolCallUpdate,
+) -> @moonacp.Outcome raise {
+  session.request_permission({
+    tool_call: call,
+    options: [
+      {
+        option_id: "allow",
+        name: "Allow",
+        kind: @moonacp.PermissionOptionKind::AllowOnce,
+        meta: None,
+      },
+    ],
     meta: None,
-  },
-  options: [
-    { option_id: "allow", name: "Allow", kind: @moonacp.PermissionOptionKind::AllowOnce, meta: None },
-  ],
-  meta: None,
-})
+  })
+}
+```
+
+## Trace a conversation
+
+`@otel` wraps either side. A turn becomes one span and every file or terminal request the agent
+makes of the editor becomes one more; both are spans the OpenTelemetry GenAI conventions define,
+with their names read from `moontel/semconv`. Prompt and answer text is never recorded.
+
+```moonbit native
+let tracer = @trace.Tracer::new(
+  rand=width => Bytes::make(width, b'\x21'),
+  sink=@trace.Recorder::new(),
+  sampler=@trace.always,
+)
+@stdio.serve_stdio(@otel.traced(Bot::new(), tracer))
+```
+
+The editor's side is the same call with the other contract. `options` fills in the agent's name
+where the editor has no `initialize` answer to read it from:
+
+```moonbit native
+let client : &@moonacp.Client = @otel.traced_client(
+  Screen::{ text: "", },
+  tracer,
+  options={ agent_name: "bot", agent_version: "0.1.0" },
+)
+ignore(client)
 ```
 
 ## Rules worth knowing
@@ -114,3 +188,7 @@ let outcome = session.request_permission({
 - The MCP servers a client names in `session/new` are records here; launching and speaking to them
   is MCP, and the example (`src/examples/02-notes-agent/mcp.mbt`) shows the shape: spawn, hand-shake,
   `tools/list`.
+- A traced agent keeps answering everything the wrapped one answered: the wrapper forwards every
+  method, so a capability does not disappear because a span was added around it.
+- A turn that fails ends its span as an error and still fails the caller; a turn that is cancelled
+  ends as `Ok` with `cancelled` among its finish reasons.

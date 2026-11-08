@@ -5,3 +5,5 @@ _*
 target/
 scripts/interop/node_modules/
 scripts/interop/package-lock.json
+moon.work
+scripts/interop/rust-http-client/Cargo.lock

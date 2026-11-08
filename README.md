@@ -14,6 +14,7 @@ command. This library is that agreement — the session, the streamed updates, t
 prompts, the files and the terminals — with both sides of it in one place and two transports to
 carry it.
 
+<!-- nocheck -->
 ```moonbit
 moon add moonbitstack/moonacp
 ```
@@ -23,8 +24,15 @@ moon add moonbitstack/moonacp
 Three methods are required. Everything else has a default that reports itself as unsupported, so an
 agent advertises in `initialize` exactly what it answers.
 
-<!-- nocheck -->
-```moonbit
+```moonbit native
+struct Notes {
+  mut sessions : Int32
+}
+
+fn Notes::new() -> Notes {
+  { sessions: 0 }
+}
+
 impl @moonacp.Agent for Notes with fn initialize(self, request) {
   ignore(self)
   ignore(request)
@@ -39,6 +47,7 @@ impl @moonacp.Agent for Notes with fn initialize(self, request) {
 }
 
 impl @moonacp.Agent for Notes with fn new_session(self, request) {
+  ignore(request)
   self.sessions = self.sessions + 1
   { session_id: "notes-\{self.sessions}", modes: None, config_options: None, meta: None }
 }
@@ -59,11 +68,8 @@ impl @moonacp.Agent for Notes with fn prompt(self, request, session) {
 
 Serve it on the pipe an editor launches it with:
 
-<!-- nocheck -->
-```moonbit
-async fn main {
-  @stdio.serve_stdio(Notes::new())
-}
+```moonbit native
+@stdio.serve_stdio(Notes::new())
 ```
 
 ## An editor in full
@@ -71,31 +77,60 @@ async fn main {
 The client side is the same shape: implement `Client` for what the editor answers, connect it to a
 transport, and run the connection so updates arrive while a turn is in flight.
 
-<!-- nocheck -->
-```moonbit
-let child = @stdio.spawn(editor, ["/usr/local/bin/notes-agent"])
-let conn = child.conn()
-@async.with_task_group(async fn(group) {
-  group.spawn_bg(async fn() { conn.run() })
-  ignore(conn.initialize({
-    protocol_version: @moonacp.protocol_version,
-    client_capabilities: @moonacp.ClientCapabilities::none(),
-    client_info: None,
-    meta: None,
-  }))
-  let session = conn.new_session({
-    cwd: "/work",
-    additional_directories: None,
-    mcp_servers: [],
-    meta: None,
+```moonbit native
+struct Editor {
+  mut chunks : Int32
+}
+
+fn Editor::new() -> Editor {
+  { chunks: 0 }
+}
+
+impl @moonacp.Client for Editor with fn update(self, id, update) {
+  ignore(id)
+  match update {
+    @moonacp.SessionUpdate::AgentMessageChunk(chunk) =>
+      if chunk.content is @moonacp.ContentBlock::Text(text) {
+        self.chunks = self.chunks + 1
+        println(text.text)
+      }
+    _ => ()
+  }
+}
+
+impl @moonacp.Client for Editor with fn request_permission(self, ask) {
+  ignore(self)
+  match ask.options {
+    [] => @moonacp.Outcome::Cancelled
+    [first, ..] => @moonacp.Outcome::Selected(first.option_id)
+  }
+}
+
+async fn main {
+  let child = @stdio.spawn(Editor::new(), ["/usr/local/bin/notes-agent"])
+  let conn = child.conn()
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { conn.run() })
+    ignore(conn.initialize({
+      protocol_version: @moonacp.protocol_version,
+      client_capabilities: @moonacp.ClientCapabilities::none(),
+      client_info: None,
+      meta: None,
+    }))
+    let session = conn.new_session({
+      cwd: "/work",
+      additional_directories: None,
+      mcp_servers: [],
+      meta: None,
+    })
+    let answer = conn.prompt({
+      session_id: session.session_id,
+      prompt: [@moonacp.ContentBlock::Text({ text: "hello", annotations: None, meta: None })],
+      meta: None,
+    })
+    println(answer.stop_reason.to_string())
   })
-  let answer = conn.prompt({
-    session_id: session.session_id,
-    prompt: [@moonacp.ContentBlock::Text({ text: "hello", annotations: None, meta: None })],
-    meta: None,
-  })
-  println(answer.stop_reason.to_string())
-})
+}
 ```
 
 ## Transports
@@ -108,6 +143,36 @@ let conn = child.conn()
 The remote transport follows the protocol's request for discussion of 2026-11-04. That document is
 not final, and the schema has no member for the connection identifier it introduces: the identifier
 travels in the `initialize` answer's `_meta` and in an `Acp-Connection-Id` header.
+
+## Traces
+
+`@otel` wraps either side of the conversation, so that what happened in it can be read afterwards.
+A turn becomes one span, and every file or terminal request the agent makes of the editor becomes
+one more. Both are spans the OpenTelemetry GenAI semantic conventions define, and their names are
+read from `moontel/semconv`, which is generated from that registry — nothing in a trace is named by
+this library.
+
+| Span | Written by | Carries |
+|:--|:--|:--|
+| `invoke_agent {agent}` | `@otel.traced`, one per prompt | the agent and its version, the conversation — ACP's session — and the stop reason as `gen_ai.response.finish_reasons` |
+| `execute_tool {method}` | `@otel.traced_client`, one per `fs/*` and `terminal/*` request | the tool, named after the method, the conversation, and the agent when the editor knows it |
+
+A span covers the call, so a turn that failed ends as an error with the failure as its status, and a
+turn that was cancelled ends as `Ok` with `cancelled` among its finish reasons. Prompt and answer
+text is never recorded: a trace is read by more people than the conversation is.
+
+```moonbit native
+let tracer = @trace.Tracer::new(
+  rand=width => Bytes::make(width, b'\x21'),
+  sink=@trace.Recorder::new(),
+  sampler=@trace.always,
+)
+@stdio.serve_stdio(@otel.traced(Notes::new(), tracer))
+```
+
+The tracer is the one `moontel` builds, so spans go wherever its sinks send them: a recorder in a
+test, a collector over OTLP, a file. The example in `src/examples/04-otel` runs a whole conversation
+— both sides wrapped — and exports it.
 
 ## The interface
 
@@ -160,14 +225,20 @@ MCP is a protocol of its own.
 
 ## Consistency
 
-The official conformance suite runs against the example agent on every push, and both official
-SDKs are driven in both directions. The suite's verdict is `CONFORMANT`, with every mandatory
-requirement and every capability the example advertises passing — including its advisory check that
-the agent connects to the MCP server a session is given. One gap remains, and it is listed rather
-than hidden:
+Every implementation this protocol has an official client for is driven against the example agent,
+in both directions, and every message either side writes is checked against the published schema.
+Nothing is listed as passing that does not run on every push.
 
-- The remote transport has not been driven by the official Rust SDK's HTTP client, which the Rust
-  SDK does not publish yet.
+| Check | Pinned at | Result |
+|:--|:--|:--|
+| `acp-tck`, the official conformance suite | commit `b7f40fb`, v1 suite | `CONFORMANT`: every mandatory requirement and every declared capability |
+| The published schema | v1.29.1 | every message, both directions |
+| Official TypeScript client → this library | `@agentclientprotocol/sdk` 2.4.0 | conversation, streamed answer, cancel |
+| Official Python client → this library | `agent-client-protocol` 0.12.1 | conversation, streamed answer, cancel |
+| This library → official TypeScript agent | `@agentclientprotocol/sdk` 2.4.0 | conversation, streamed answer |
+| This library → official Python agent | `agent-client-protocol` 0.12.1 | conversation, streamed answer |
+| Official Rust client over HTTP → this library's server | `agent-client-protocol-http` 5.0.0 | initialize, session, streamed turn, cancel, list |
+| The spans this library writes against the GenAI registry | `weaver` 0.28.0, conventions `aa3b7f4` | no findings |
 
 ## License
 
