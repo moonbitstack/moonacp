@@ -110,7 +110,8 @@ jobs:
         run: |
           printf 'members = [".", "integration/http-acp"]\n' > moon.work
           moon build --target native
-          AGENT=$(find _build/native/debug/build -name 'moonacp-integration-http' -type f | head -1)
+          AGENT=$(find _build/native/debug/build -name 'moonacp-integration-http*' -type f -perm -u+x | head -1)
+          echo "the server is $AGENT"
           echo "HTTP_AGENT=$PWD/$AGENT" >> $GITHUB_ENV
 
       - name: the official Rust client, over HTTP
