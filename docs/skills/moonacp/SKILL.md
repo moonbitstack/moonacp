@@ -148,11 +148,12 @@ async fn approve(
 }
 ```
 
-## Trace a conversation
+## Trace and measure a conversation
 
-`@otel` wraps either side. A turn becomes one span and every file or terminal request the agent
-makes of the editor becomes one more; both are spans the OpenTelemetry GenAI conventions define,
-with their names read from `moontel/semconv`. Prompt and answer text is never recorded.
+`@otel` wraps either side. A turn becomes one span and one histogram observation; every file or
+terminal request the agent makes of the editor becomes one more of each. All of them are the signals
+the OpenTelemetry GenAI conventions define, named from `moontel/semconv`. Prompt and answer text is
+never recorded.
 
 ```moonbit native
 let tracer = @trace.Tracer::new(
@@ -175,6 +176,22 @@ let client : &@moonacp.Client = @otel.traced_client(
 ignore(client)
 ```
 
+Metrics are the same shape: `metered` and `metered_client` take an OTLP metrics exporter instead of
+a tracer and record one observation of `gen_ai.invoke_agent.duration` or
+`gen_ai.execute_tool.duration` per operation. The wrappers compose, in either order:
+
+```moonbit native
+let transport = @grpc.GrpcTransport::connect(host="127.0.0.1", port=4317)
+let metrics = @otlp.MetricsExporter::new(
+  transport~,
+  format=@otlp.BodyFormat::Protobuf,
+  now=@async.now,
+  rand=width => Bytes::make(width, b'\x21'),
+)
+let measured = @otel.metered(@otel.traced(Bot::new(), tracer), metrics)
+ignore(measured)
+```
+
 ## Rules worth knowing
 
 - A capability in `initialize` is a promise: leave a method out and it must not be advertised.
@@ -192,3 +209,6 @@ ignore(client)
   method, so a capability does not disappear because a span was added around it.
 - A turn that fails ends its span as an error and still fails the caller; a turn that is cancelled
   ends as `Ok` with `cancelled` among its finish reasons.
+- The metric and the span measure the same call, so a backend that has both should see one duration,
+  not two. The conversation is not an attribute of either histogram: only the agent is, which keeps
+  the series count from growing with every session.

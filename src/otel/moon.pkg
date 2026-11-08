@@ -1,14 +1,15 @@
-// Tracing for the two sides of the protocol.
+// Telemetry for the two sides of the protocol.
 //
-// One wrapper per side: `traced` for an agent, `traced_client` for an editor. Both record the
-// operations the OpenTelemetry GenAI semantic conventions name, and every span and attribute
-// these wrappers write is spelled by `moontel/semconv`, which is generated from the registry at
-// the commit the conventions pin.
+// Two wrappers per side: `traced` and `metered` for an agent, `traced_client` and `metered_client`
+// for an editor. They record the operations the OpenTelemetry GenAI semantic conventions name, and
+// every span, metric and attribute they write is spelled by `moontel/semconv`, which is generated
+// from the registry at the commit the conventions pin.
 //
 // https://github.com/open-telemetry/semantic-conventions-genai
 import {
   "moonbitlang/async",
   "moonbitstack/moonacp",
+  "moonbitstack/moontel/otlp",
   "moonbitstack/moontel/semconv",
   "moonbitstack/moontel/trace",
 }
@@ -16,5 +17,7 @@ import {
 import {
   "moonbitlang/async",
   "moonbitlang/async/aqueue",
+  "moonbitlang/core/encoding/utf8",
   "moonbitstack/moonjrpc/peer",
+  "moonbitstack/moontel/otlp",
 } for "wbtest"

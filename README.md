@@ -144,18 +144,20 @@ The remote transport follows the protocol's request for discussion of 2026-11-04
 not final, and the schema has no member for the connection identifier it introduces: the identifier
 travels in the `initialize` answer's `_meta` and in an `Acp-Connection-Id` header.
 
-## Traces
+## Traces and metrics
 
 `@otel` wraps either side of the conversation, so that what happened in it can be read afterwards.
-A turn becomes one span, and every file or terminal request the agent makes of the editor becomes
-one more. Both are spans the OpenTelemetry GenAI semantic conventions define, and their names are
-read from `moontel/semconv`, which is generated from that registry — nothing in a trace is named by
-this library.
+A turn becomes one span and one observation of a duration, and every file or terminal request the
+agent makes of the editor becomes one more of each. Every name here — of a span, of a metric, of an
+attribute — is read from `moontel/semconv`, which is generated from the OpenTelemetry GenAI
+registry; nothing in a signal is named by this library.
 
-| Span | Written by | Carries |
+| Signal | Written by | Carries |
 |:--|:--|:--|
-| `invoke_agent {agent}` | `@otel.traced`, one per prompt | the agent and its version, the conversation — ACP's session — and the stop reason as `gen_ai.response.finish_reasons` |
-| `execute_tool {method}` | `@otel.traced_client`, one per `fs/*` and `terminal/*` request | the tool, named after the method, the conversation, and the agent when the editor knows it |
+| `invoke_agent {agent}` span | `@otel.traced`, one per prompt | the agent and its version, the conversation — ACP's session — and the stop reason as `gen_ai.response.finish_reasons` |
+| `execute_tool {method}` span | `@otel.traced_client`, one per `fs/*` and `terminal/*` request | the tool, named after the method, the conversation, and the agent when the editor knows it |
+| `gen_ai.invoke_agent.duration` histogram, in seconds | `@otel.metered`, one observation per prompt | the operation and the agent |
+| `gen_ai.execute_tool.duration` histogram, in seconds | `@otel.metered_client`, one observation per answered request | the tool, and the agent when the editor knows it |
 
 A span covers the call, so a turn that failed ends as an error with the failure as its status, and a
 turn that was cancelled ends as `Ok` with `cancelled` among its finish reasons. Prompt and answer
@@ -171,8 +173,23 @@ let tracer = @trace.Tracer::new(
 ```
 
 The tracer is the one `moontel` builds, so spans go wherever its sinks send them: a recorder in a
-test, a collector over OTLP, a file. The example in `src/examples/04-otel` runs a whole conversation
-— both sides wrapped — and exports it.
+test, a collector over OTLP, a file. Metrics go the same way — a histogram is one observation per
+turn, and the built-in bounds are five milliseconds to ten seconds:
+
+```moonbit native
+let transport = @grpc.GrpcTransport::connect(host="127.0.0.1", port=4317)
+let metrics = @otlp.MetricsExporter::new(
+  transport~,
+  format=@otlp.BodyFormat::Protobuf,
+  now=@async.now,
+  rand=width => Bytes::make(width, b'\x21'),
+)
+@stdio.serve_stdio(@otel.metered(Notes::new(), metrics))
+```
+
+The wrappers compose, so one line gets both: `@otel.metered(@otel.traced(agent, tracer), metrics)`.
+The example in `src/examples/04-otel` runs a whole conversation with all four wrappers on and
+exports both signals.
 
 ## The interface
 
@@ -238,7 +255,7 @@ Nothing is listed as passing that does not run on every push.
 | This library → official TypeScript agent | `@agentclientprotocol/sdk` 2.4.0 | conversation, streamed answer |
 | This library → official Python agent | `agent-client-protocol` 0.12.1 | conversation, streamed answer |
 | Official Rust client over HTTP → this library's server | `agent-client-protocol-http` 5.0.0 | initialize, session, streamed turn, cancel, list |
-| The spans this library writes against the GenAI registry | `weaver` 0.28.0, conventions `aa3b7f4` | no findings |
+| The signals this library writes against the GenAI registry | `weaver` 0.28.0, conventions `aa3b7f4` | spans and metrics, no findings |
 
 ## License
 

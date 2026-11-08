@@ -3,10 +3,15 @@ package "moonbitstack/moonacp/otel"
 
 import {
   "moonbitstack/moonacp",
+  "moonbitstack/moontel/otlp",
   "moonbitstack/moontel/trace",
 }
 
 // Values
+pub fn metered(&@moonacp.Agent, @otlp.MetricsExporter, options? : Options) -> &@moonacp.Agent
+
+pub fn metered_client(&@moonacp.Client, @otlp.MetricsExporter, options? : Options) -> &@moonacp.Client
+
 pub let options : Options
 
 pub fn traced(&@moonacp.Agent, @trace.Tracer, options? : Options) -> &@moonacp.Agent

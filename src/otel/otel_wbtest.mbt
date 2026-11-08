@@ -384,3 +384,132 @@ async test "a wrapped agent still answers the methods it always did" {
   })
   assert_eq(agent.loaded, 1)
 }
+
+///|
+/// A collector that keeps what it was sent, so a test can read the payload.
+struct Exports {
+  bodies : Array[String]
+}
+
+///|
+fn Exports::new() -> Exports {
+  { bodies: [], }
+}
+
+///|
+impl @otlp.Transport for Exports with fn send(self, request) {
+  self.bodies.push(@utf8.decode_lossy(request.body))
+  { status: 200, headers: [], body: Bytes::new(0), }
+}
+
+///|
+fn millis() -> Int64 {
+  @async.now()
+}
+
+///|
+/// An exporter over the recording transport, in the JSON encoding: readable payloads, and a
+/// `flush` a test can wait on.
+fn exporter(sink : Exports) -> @otlp.MetricsExporter {
+  @otlp.MetricsExporter::new(
+    transport=sink,
+    endpoint="http://collector.example/v1/metrics",
+    format=@otlp.BodyFormat::Json,
+    now=millis,
+    rand=patterns,
+    attempts=1,
+  )
+}
+
+///|
+test "a histogram counts a value in the bucket its bound closes" {
+  let seconds = Seconds::new()
+  seconds.observe(0.005, 1L)
+  seconds.observe(0.006, 2L)
+  seconds.observe(20.0, 3L)
+  assert_eq(seconds.count, 3L)
+  assert_eq(seconds.total, 20.011)
+  assert_eq(seconds.least, 0.005)
+  assert_eq(seconds.most, 20.0)
+  // Fourteen bounds make fifteen buckets: the last one is everything above the last bound.
+  assert_eq(seconds.counts.length(), 15)
+  assert_eq(seconds.counts[0], 1L)
+  assert_eq(seconds.counts[1], 1L)
+  assert_eq(seconds.counts[14], 1L)
+}
+
+///|
+async test "a turn is one observation of the agent's duration, exported as OTLP" {
+  let sink = Exports::new()
+  let meter = exporter(sink)
+  let (agent_wire, client_wire) = wire()
+  let agent = Reader::new()
+  let editor = Editor::new()
+  let peer = @moonacp.serve(metered(agent, meter), agent_wire)
+  let conn = @moonacp.connect(editor, client_wire)
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { peer.run() })
+    group.spawn_bg(async fn() { conn.run() })
+    defer agent_wire.shut()
+    defer client_wire.shut()
+    ignore(handshake(conn))
+    let id = open_session(conn)
+    ignore(
+      conn.prompt({
+        session_id: id,
+        prompt: [@moonacp.Text({ text: "hi", annotations: None, meta: None, })],
+        meta: None,
+      }),
+    )
+  })
+  let report = meter.flush()
+  assert_eq(report.delivered, 1)
+  let text = sink.bodies[0]
+  assert_true(text.contains(@semconv.gen_ai_invoke_agent_duration))
+  assert_true(text.contains("\"unit\":\"s\""))
+  assert_true(text.contains(@semconv.gen_ai_operation_name))
+  assert_true(text.contains("\"invoke_agent\""))
+  assert_true(text.contains(@semconv.gen_ai_agent_name))
+}
+
+///|
+async test "a request the editor answers is one observation of the tool's duration" {
+  let sink = Exports::new()
+  let meter = exporter(sink)
+  let (agent_wire, client_wire) = wire()
+  let agent = Reader::new()
+  agent.reads = true
+  let editor = Editor::new()
+  let peer = @moonacp.serve(agent, agent_wire)
+  let conn = @moonacp.connect(
+    metered_client(editor, meter, options={
+      agent_name: "echo",
+      agent_version: "0.1.0",
+    }),
+    client_wire,
+  )
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { peer.run() })
+    group.spawn_bg(async fn() { conn.run() })
+    defer agent_wire.shut()
+    defer client_wire.shut()
+    ignore(handshake(conn))
+    let id = open_session(conn)
+    ignore(
+      conn.prompt({
+        session_id: id,
+        prompt: [
+          @moonacp.Text({ text: "read it", annotations: None, meta: None, }),
+        ],
+        meta: None,
+      }),
+    )
+  })
+  assert_eq(editor.read, 1)
+  let report = meter.flush()
+  assert_eq(report.delivered, 1)
+  let text = sink.bodies[0]
+  assert_true(text.contains(@semconv.gen_ai_execute_tool_duration))
+  assert_true(text.contains(@semconv.gen_ai_tool_name))
+  assert_true(text.contains("fs/read_text_file"))
+}

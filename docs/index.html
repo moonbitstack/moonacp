@@ -51,7 +51,7 @@
           <p>Start</p>
           <a href="#top" aria-current="page">Overview</a>
           <a href="#transport">Two transports</a>
-          <a href="#traces">Traces</a>
+          <a href="#traces">Traces and metrics</a>
           <a href="#guide">Guide</a>
           <a href="#consistency">Consistency</a>
           <p>Reference</p>
@@ -160,12 +160,13 @@ let app = @asgi.to_asgi(MyAgent::new())</code></pre>
           <code>_meta</code> and in a response header, and are documented as such.
         </div>
 
-        <h2 id="traces">Traces</h2>
+        <h2 id="traces">Traces and metrics</h2>
         <p>
           A conversation is worth reading afterwards: which turn took the time, what the agent asked
           the editor for, which of them failed. <code>@otel</code> wraps either side and writes that
-          down as spans — the ones the OpenTelemetry GenAI conventions define, named from a registry
-          rather than from this library, so a backend already knows what they mean.
+          down as spans and as durations — the signals the OpenTelemetry GenAI conventions define,
+          named from a registry rather than from this library, so a backend already knows what they
+          mean.
         </p>
 
         <table>
@@ -183,6 +184,16 @@ let app = @asgi.to_asgi(MyAgent::new())</code></pre>
               <td><code>@otel.traced_client</code>, one per file or terminal request</td>
               <td>the tool, named after the method it answers, and the conversation</td>
             </tr>
+            <tr>
+              <td><code>gen_ai.invoke_agent.duration</code></td>
+              <td><code>@otel.metered</code>, one observation per prompt</td>
+              <td>a histogram in seconds: the operation, and the agent</td>
+            </tr>
+            <tr>
+              <td><code>gen_ai.execute_tool.duration</code></td>
+              <td><code>@otel.metered_client</code>, one observation per answered request</td>
+              <td>a histogram in seconds: the tool, and the agent</td>
+            </tr>
           </tbody>
         </table>
 
@@ -191,6 +202,12 @@ let app = @asgi.to_asgi(MyAgent::new())</code></pre>
           a turn that was cancelled ends as <code>Ok</code>, with <code>cancelled</code> among its
           finish reasons. Prompt and answer text is never recorded — a trace is read by more people
           than the conversation is.
+        </p>
+
+        <p>
+          The two wrappers compose, so a program that wants both writes
+          <code>@otel.metered(@otel.traced(agent, tracer), metrics)</code> and hands the result to the
+          transport it already runs.
         </p>
 
         <!-- nocheck -->
@@ -400,7 +417,7 @@ data: {"jsonrpc":"2.0","id":3,"result":{"stopReason":"end_turn"}}</code></pre>
             <div><dt>Schema</dt><span class="lead"></span><dd>v1.29.1</dd></div>
             <div><dt>Transports</dt><span class="lead"></span><dd>stdio · ASGI</dd></div>
             <div><dt>Packages</dt><span class="lead"></span><dd>4</dd></div>
-            <div><dt>Public items</dt><span class="lead"></span><dd>213</dd></div>
+            <div><dt>Public items</dt><span class="lead"></span><dd>215</dd></div>
           </dl>
         </div>
       </aside>
