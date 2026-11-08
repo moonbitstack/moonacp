@@ -19,11 +19,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 OUT = ROOT / "docs" / "api.html"
+HOME = ROOT / "docs" / "index.html"
 
 PACKAGES = [
     ("moonacp", "The protocol, its types, and the contracts on both sides.", SRC),
     ("moonacp/stdio", "Serving an agent on the process's own streams.", SRC / "stdio"),
     ("moonacp/asgi", "Serving an agent over HTTP streams and a WebSocket.", SRC / "asgi"),
+    (
+        "moonacp/otel",
+        "Tracing both sides with the OpenTelemetry GenAI conventions.",
+        SRC / "otel",
+    ),
 ]
 
 PROMOTED = {
@@ -276,6 +282,20 @@ def render(api_doc: str) -> str:
     )
 
 
+def stamp_home(page: str, packages: int, items: int) -> str:
+    """The two counts the home page states come from the sources, not from a hand that forgets."""
+    page = re.sub(
+        r"(<dt>Packages</dt><span class=\"lead\"></span><dd>)\d+(</dd>)",
+        lambda found: f"{found.group(1)}{packages}{found.group(2)}",
+        page,
+    )
+    return re.sub(
+        r"(<dt>Public items</dt><span class=\"lead\"></span><dd>)\d+(</dd>)",
+        lambda found: f"{found.group(1)}{items}{found.group(2)}",
+        page,
+    )
+
+
 def main(argv: list[str]) -> int:
     expected = set()
     for _, _, directory in PACKAGES:
@@ -290,15 +310,25 @@ def main(argv: list[str]) -> int:
             print(f"  {name}")
         return 1
     page = render(API_TEMPLATE)
+    home = stamp_home(
+        HOME.read_text(encoding="utf-8") if HOME.exists() else "", len(PACKAGES), len(documented)
+    )
     if "--check" in argv:
-        current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
-        if current != page:
-            print("docs/api.html is not what the sources say; run scripts/gen_api.py")
+        stale = []
+        if not OUT.exists() or OUT.read_text(encoding="utf-8") != page:
+            stale.append(OUT.relative_to(ROOT))
+        if HOME.exists() and HOME.read_text(encoding="utf-8") != home:
+            stale.append(HOME.relative_to(ROOT))
+        if stale:
+            print("these pages are not what the sources say; run scripts/gen_api.py:")
+            for path in stale:
+                print(f"  {path}")
             return 1
-        print(f"{len(documented)} public items, page is current")
+        print(f"{len(documented)} public items, pages are current")
         return 0
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(page, encoding="utf-8", newline="\n")
+    HOME.write_text(home, encoding="utf-8", newline="\n")
     print(f"{len(documented)} public items written to {OUT.relative_to(ROOT)}")
     return 0
 
