@@ -2,11 +2,12 @@ name: Telemetry
 
 # What this library writes to a trace, checked against the registry the spans are named from.
 #
-# `weaver registry live-check` listens for OTLP and compares every span it receives with the
-# OpenTelemetry GenAI semantic conventions: a name the registry does not define, an attribute the
-# signal does not declare, or a value of the wrong type is a finding. The example under test is a
-# whole conversation — a turn, the file the agent reads through the editor, and a turn that fails —
-# exported over OTLP/gRPC, so one run covers both statuses and both span types.
+# `weaver registry live-check` listens for OTLP and compares every signal it receives — spans and
+# metrics both — with the OpenTelemetry GenAI semantic conventions: a name the registry does not
+# define, an attribute the signal does not declare, or a value of the wrong type is a finding. The
+# example under test is a whole conversation — a turn, the file the agent reads through the editor,
+# and a turn that fails — exported over OTLP/gRPC, so one run covers both statuses, both span types
+# and both histograms.
 #
 # The registry is pinned to the commit `moontel/semconv` was generated from, and weaver to a
 # release, so a green run means the same thing tomorrow.
@@ -24,6 +25,9 @@ jobs:
     runs-on: ubuntu-26.04
     env:
       WEAVER_VERSION: "0.28.0"
+      # The release's own checksum: the download is retried, and a body that is not the
+      # release is not unpacked.
+      WEAVER_SHA256: "9878e2d56ad82ae441b0b527377a4f6001ae19f4af362fb0a4d951884f59ab61"
       SEMCONV_GENAI_COMMIT: "aa3b7f4394245fec260013898049780975a407a4"
     steps:
       - uses: actions/checkout@v7
@@ -46,8 +50,16 @@ jobs:
 
       - name: install weaver
         run: |
-          curl -fsSL -o "$RUNNER_TEMP/weaver.tar.xz" \
-            "https://github.com/open-telemetry/weaver/releases/download/v${WEAVER_VERSION}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          url="https://github.com/open-telemetry/weaver/releases/download/v${WEAVER_VERSION}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          for attempt in 1 2 3 4 5; do
+            curl -fsSL --max-time 120 -o "$RUNNER_TEMP/weaver.tar.xz" "$url" || true
+            if echo "$WEAVER_SHA256  $RUNNER_TEMP/weaver.tar.xz" | sha256sum -c --status -; then
+              break
+            fi
+            echo "attempt $attempt did not download the release; retrying"
+            sleep 10
+          done
+          echo "$WEAVER_SHA256  $RUNNER_TEMP/weaver.tar.xz" | sha256sum -c -
           tar -xJf "$RUNNER_TEMP/weaver.tar.xz" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/weaver-x86_64-unknown-linux-gnu" >> $GITHUB_PATH
 
@@ -56,7 +68,7 @@ jobs:
           git clone https://github.com/open-telemetry/semantic-conventions-genai.git "$RUNNER_TEMP/semconv-genai"
           git -C "$RUNNER_TEMP/semconv-genai" checkout "$SEMCONV_GENAI_COMMIT"
 
-      - name: the spans against the registry
+      - name: the signals against the registry
         run: |
           weaver registry live-check \
             --registry "$RUNNER_TEMP/semconv-genai/model" \
