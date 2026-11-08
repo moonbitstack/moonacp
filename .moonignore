@@ -4,3 +4,8 @@
 .git/
 _build/
 target/
+
+# Examples that pull in another library are their own module, built against this
+# one only when someone checks the interop out: nobody installing this needs the
+# server runtime they carry.
+integration/

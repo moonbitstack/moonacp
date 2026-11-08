@@ -1,0 +1,18 @@
+// Serves an ACP agent the way a network client reaches it: one `/acp` endpoint, run by mooncat.
+//
+//     moon run integration/http-acp --target native [port]
+//
+// Port 0 — the default — lets the system pick one, and the address it picked is printed on stdout
+// before anything else, so a harness can start this program and connect to it without guessing a
+// port. That is how the Rust SDK's HTTP client is driven against this library.
+supported_targets = "+native"
+
+import {
+  "moonbitlang/async",
+  "moonbitlang/core/env",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/asgi",
+  "moonbitstack/mooncat",
+}
+
+pkgtype(kind: "executable")

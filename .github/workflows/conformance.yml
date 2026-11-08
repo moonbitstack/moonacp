@@ -82,3 +82,38 @@ jobs:
             python scripts/interop/py-agent.py | tee python-report.txt
           grep -q "stop: end_turn" python-report.txt
           grep -q "answer: python echo: hello from a MoonBit client" python-report.txt
+
+  # The remote transport, driven by the official Rust client: their `HttpClient` against this
+  # library's ASGI application, served by mooncat. The integration module is a workspace member of
+  # this repository at build time, which is how it compiles against the working tree rather than
+  # the published module; `moon.work` is written here and is not part of the repository.
+  rust-http:
+    permissions:
+      contents: read
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: post install
+        run: |
+          moon version --all
+          moon update
+
+      - name: serve the agent over HTTP
+        run: |
+          printf 'members = [".", "integration/http-acp"]\n' > moon.work
+          moon build --target native
+          AGENT=$(find _build/native/debug/build -name 'moonacp-integration-http' -type f | head -1)
+          echo "HTTP_AGENT=$PWD/$AGENT" >> $GITHUB_ENV
+
+      - name: the official Rust client, over HTTP
+        run: |
+          cargo build --release --manifest-path scripts/interop/rust-http-client/Cargo.toml
+          ./scripts/interop/rust-http-client/target/release/acp-http-interop "$HTTP_AGENT"
