@@ -123,6 +123,13 @@ async fn stream_out(
   keepalive_ms : Int32,
 ) -> Unit {
   send(HttpResponseStart(status=200, headers~, trailers=false))
+  // A server that writes the head only when the first body arrives would leave the client waiting
+  // for headers it cannot see yet — it has not been told the stream is open, so it cannot start to
+  // use it. An empty chunk puts the head on the wire and is not an event: nothing to parse, nothing
+  // to skip.
+  send(HttpResponseBody(body=Bytes::new(0), more_body=true)) catch {
+    _ => ()
+  }
   @async.with_task_group(async fn(group) {
     group.spawn_bg(async fn() {
       while true {
@@ -155,6 +162,28 @@ async fn stream_out(
 }
 
 ///|
+/// The path of a request target. A client that treats a server as a proxy sends the absolute form —
+/// `GET http://host/acp HTTP/1.1` — which RFC 9112 requires a server to accept; what is left after
+/// the authority is the path every route compares against.
+fn path_of(target : String) -> String {
+  let after_scheme = if target.has_prefix("http://") {
+    Some(target[7:])
+  } else if target.has_prefix("https://") {
+    Some(target[8:])
+  } else {
+    None
+  }
+  match after_scheme {
+    None => target
+    Some(rest) =>
+      match rest.find("/") {
+        Some(at) => rest[at:].to_owned()
+        None => "/"
+      }
+  }
+}
+
+///|
 /// Serves an agent over ASGI: one path, four verbs, and a WebSocket upgrade. Nothing is global, so
 /// several agents can be mounted side by side.
 pub fn to_asgi(
@@ -177,7 +206,7 @@ pub fn to_asgi(
         }
       }
       Http(http) =>
-        if http.path != path {
+        if path_of(http.path) != path {
           respond(send, 404, [], "")
         } else {
           match allowed_host(hosts, http.headers) {
@@ -186,7 +215,7 @@ pub fn to_asgi(
           }
         }
       WebSocket(websocket) =>
-        if websocket.path != path {
+        if path_of(websocket.path) != path {
           send(WebSocketClose(code=1404, reason="not found")) catch {
             _ => ()
           }
@@ -418,16 +447,12 @@ async fn handle_get(
       return
     }
   }
+  // A stream may be opened before the session it names exists: a client opens the stream of a
+  // session it is about to `session/load` and sends the call afterwards, so the answer has to have
+  // somewhere to arrive. The stream belongs to the connection, and the answer is routed by the
+  // identifier the call carries.
   let queue = match header(http.headers, "acp-session-id") {
-    Some(session) =>
-      if connection.knows(session) {
-        connection.wire.routes.scope(session)
-      } else {
-        respond(send, 404, [], "") catch {
-          _ => ()
-        }
-        return
-      }
+    Some(session) => connection.wire.routes.scope(session)
     None => connection.wire.routes.common
   }
   let headers : Array[(String, String)] = [
@@ -435,8 +460,14 @@ async fn handle_get(
     ("cache-control", "no-store"),
     ("x-accel-buffering", "no"),
   ]
+  // The connection stream hosts the agent's side of the connection for as long as it is open. One
+  // reader for the wire: a second peer would answer the same message twice, and a cancel would
+  // reach a set of turns that does not hold the turn it means to stop. A session stream is a
+  // second view of the answers, not a second reader.
   @async.with_task_group(async fn(group) {
-    group.spawn_bg(async fn() { connection.pump(agent) }, no_wait=true)
+    if header(http.headers, "acp-session-id") is None {
+      group.spawn_bg(async fn() { connection.pump(agent) }, no_wait=true)
+    }
     stream_out(send, receive, queue, headers, limits.keepalive_ms)
   })
 }

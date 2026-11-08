@@ -314,3 +314,134 @@ async test "a WebSocket carries the whole conversation" {
     side.inbox.put(WebSocketDisconnect(code=1000, reason=None))
   })
 }
+
+///|
+/// An agent that can reopen a session it kept, which is what a client loads.
+struct Kept {}
+
+///|
+impl @moonacp.Agent for Kept with fn initialize(self, request) {
+  ignore(self)
+  ignore(request)
+  {
+    ..@moonacp.Initialized::new(),
+    capabilities: { ..@moonacp.AgentCapabilities::none(), load_session: true, },
+  }
+}
+
+///|
+impl @moonacp.Agent for Kept with fn new_session(self, request) {
+  ignore(self)
+  ignore(request)
+  { session_id: "s-1", modes: None, config_options: None, meta: None, }
+}
+
+///|
+impl @moonacp.Agent for Kept with fn load_session(self, request, session) {
+  ignore(self)
+  session.update(
+    @moonacp.UserMessageChunk({
+      content: @moonacp.Text({
+        text: "replayed",
+        annotations: None,
+        meta: None,
+      }),
+      message_id: None,
+      meta: None,
+    }),
+  )
+  {
+    session_id: request.session_id,
+    modes: None,
+    config_options: None,
+    meta: None,
+  }
+}
+
+///|
+impl @moonacp.Agent for Kept with fn prompt(self, request, session) {
+  ignore(self)
+  ignore(request)
+  ignore(session)
+  @moonacp.EndTurn
+}
+
+///|
+async test "a stream opened for a session the agent has not named yet carries the load" {
+  let app = to_asgi(Kept::{ })
+  let stream_side = Side::new()
+  let common = Side::new()
+  @async.with_task_group(async fn(group) {
+    let (_, headers, _) = post(
+      app,
+      group,
+      "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":1}}",
+      [("content-type", "application/json")],
+    )
+    let connection = match header_of(headers, "acp-connection-id") {
+      Some(id) => id
+      None => abort("no connection id")
+    }
+    // The connection stream answers what the connection is asked; a session stream is a second
+    // view of those answers, and it may be opened before the session it names exists.
+    common.start(
+      app,
+      group,
+      http_scope("GET", [
+        ("accept", "text/event-stream"),
+        ("acp-connection-id", connection),
+      ]),
+    )
+    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    guard common.outbox.get() is HttpResponseStart(..) else {
+      abort("no connection stream")
+    }
+    // The session stream comes first, for a session this connection has never mentioned.
+    stream_side.start(
+      app,
+      group,
+      http_scope("GET", [
+        ("accept", "text/event-stream"),
+        ("acp-connection-id", connection),
+        ("acp-session-id", "stored"),
+      ]),
+    )
+    stream_side.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    guard stream_side.outbox.get() is HttpResponseStart(status~, ..) else {
+      abort("no stream")
+    }
+    assert_eq(status, 200)
+    let (status, _, _) = post(
+      app,
+      group,
+      "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"session/load\",\"params\":{\"sessionId\":\"stored\",\"cwd\":\"/work\",\"mcpServers\":[]}}",
+      [
+        ("content-type", "application/json"),
+        ("acp-connection-id", connection),
+        ("acp-session-id", "stored"),
+      ],
+    )
+    assert_eq(status, 202)
+    let update = payload(frame(stream_side))
+    assert_true(update.contains("user_message_chunk"))
+    let answer = payload(frame(stream_side))
+    assert_true(answer.contains("\"stored\""))
+    stream_side.inbox.put(HttpDisconnect) catch {
+      _ => ()
+    }
+    common.inbox.put(HttpDisconnect) catch {
+      _ => ()
+    }
+  })
+}
+
+///|
+/// A client that speaks to its server as if it were a proxy sends the absolute form of the target,
+/// and RFC 9112 requires a server to accept it: the route compares the path, not the whole URI.
+test "an absolute request target is routed by its path" {
+  assert_eq(path_of("/acp"), "/acp")
+  assert_eq(path_of("http://127.0.0.1:9000/acp"), "/acp")
+  assert_eq(path_of("https://example.com/acp"), "/acp")
+  assert_eq(path_of("http://example.com"), "/")
+  assert_eq(path_of("/acp?x=1"), "/acp?x=1")
+}

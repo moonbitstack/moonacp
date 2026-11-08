@@ -39,7 +39,6 @@ priv struct Routes {
   scopes : Map[String, @aqueue.Queue[String]]
   waiting : Map[String, @aqueue.Queue[String]]
   owners : Map[String, String]
-  known : Map[String, Bool]
   backlog : Int32
   /// A WebSocket has one channel, so every message goes out on the connection's queue.
   mut unified : Bool
@@ -86,18 +85,6 @@ fn session_of(json : Json) -> String? {
 }
 
 ///|
-/// The session a result creates or names, for remembering which sessions a connection has seen.
-fn result_session(json : Json) -> String? {
-  guard json is Object(fields) else { return None }
-  if fields.get("result") is Some(Object(result)) {
-    if result.get("sessionId") is Some(String(id)) {
-      return Some(id)
-    }
-  }
-  None
-}
-
-///|
 fn Routes::scope(self : Routes, session_id : String) -> @aqueue.Queue[String] {
   match self.scopes.get(session_id) {
     Some(queue) => queue
@@ -121,12 +108,6 @@ fn Routes::deliver(self : Routes, text : String) -> Unit {
     }
   }
   let session = session_of(json)
-  if result_session(json) is Some(named) {
-    self.known[named] = true
-  }
-  if session is Some(session) {
-    self.known[session] = true
-  }
   if self.unified {
     offer(self.common, text)
     return
@@ -170,15 +151,6 @@ impl @peer.Frames for Wire with fn write(self, text) {
 }
 
 ///|
-/// Whether the connection has seen this session: in a result it delivered, or in a POST naming it.
-fn Connection::knows(self : Connection, session_id : String) -> Bool {
-  match self.wire.routes.known.get(session_id) {
-    Some(_) => true
-    None => false
-  }
-}
-
-///|
 /// One open connection: what it routes. A peer is made per task that pumps it, because a peer that
 /// has stopped reading cannot start again, while the connection outlives any single stream.
 priv struct Connection {
@@ -194,7 +166,6 @@ fn Connection::new(id : String, limits : Limits) -> Connection {
     scopes: Map([]),
     waiting: Map([]),
     owners: Map([]),
-    known: Map([]),
     backlog: limits.backlog,
     unified: false,
   }
@@ -217,9 +188,6 @@ async fn Connection::pump(self : Connection, agent : &@moonacp.Agent) -> Unit {
 /// stream.
 async fn Connection::post(self : Connection, text : String) -> Unit {
   let json = @json.parse(text) catch { _ => return }
-  if session_of(json) is Some(session_id) {
-    self.wire.routes.known[session_id] = true
-  }
   if json is Object(fields) {
     if fields.get("id") is Some(id) {
       let key = id_key(id)
