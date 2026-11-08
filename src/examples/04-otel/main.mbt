@@ -180,24 +180,44 @@ async fn main {
       None
     }
   }
-  let exporter = match connected {
+  let resource = @otlp.Resource::of_service("moonacp-example")
+  let scope = @otlp.Scope::new(name="moonbitstack/moonacp/otel")
+  let attempts = if required { 5 } else { 1 }
+  // gRPC carries the binary encoding only, so both exporters are built for it, over the one
+  // channel: two signals, one connection.
+  let spans = match connected {
     None => None
-    // gRPC carries the binary encoding only, so the exporter is built for it.
     Some(transport) =>
       Some(
         @otlp.TraceExporter::new(
           transport~,
           endpoint="http://\{address}",
-          resource=@otlp.Resource::of_service("moonacp-example"),
-          scope=@otlp.Scope::new(name="moonbitstack/moonacp/otel"),
+          resource~,
+          scope~,
           format=@otlp.BodyFormat::Protobuf,
           now=millis,
           rand=random_bytes,
-          attempts=if required { 5 } else { 1 },
+          attempts~,
         ),
       )
   }
-  let tracer = match exporter {
+  let metrics = match connected {
+    None => None
+    Some(transport) =>
+      Some(
+        @otlp.MetricsExporter::new(
+          transport~,
+          endpoint="http://\{address}",
+          resource~,
+          scope~,
+          format=@otlp.BodyFormat::Protobuf,
+          now=millis,
+          rand=random_bytes,
+          attempts~,
+        ),
+      )
+  }
+  let tracer = match spans {
     Some(exporter) =>
       @trace.Tracer::new(
         sink=exporter,
@@ -214,14 +234,27 @@ async fn main {
   let agent = Notes::{ turns: 0, }
   let editor = Editor::{ answer: "", }
   let (agent_wire, client_wire) = wire()
-  let peer = @moonacp.serve(@otel.traced(agent, tracer), agent_wire)
-  let conn = @moonacp.connect(
-    @otel.traced_client(editor, tracer, options={
-      agent_name: "notes",
-      agent_version: "1.0.0",
-    }),
-    client_wire,
-  )
+  let settings : @otel.Options = {
+    agent_name: "notes",
+    agent_version: "1.0.0",
+  }
+  // Both wrappers compose: the span says what happened, the histogram says how long it took, and
+  // either one can be left off when there is no collector to take it.
+  let observed : &@moonacp.Agent = match metrics {
+    Some(metrics) => @otel.metered(@otel.traced(agent, tracer), metrics)
+    None => @otel.traced(agent, tracer)
+  }
+  let answerer : &@moonacp.Client = match metrics {
+    Some(metrics) =>
+      @otel.metered_client(
+        @otel.traced_client(editor, tracer, options=settings),
+        metrics,
+        options=settings,
+      )
+    None => @otel.traced_client(editor, tracer, options=settings)
+  }
+  let peer = @moonacp.serve(observed, agent_wire)
+  let conn = @moonacp.connect(answerer, client_wire)
   @async.with_task_group(async fn(group) {
     group.spawn_bg(async fn() { peer.run() })
     group.spawn_bg(async fn() { conn.run() })
@@ -273,17 +306,22 @@ async fn main {
     println("second turn: \{second}")
   })
   println("the editor read: \{editor.answer}")
-  match (exporter, connected) {
-    (Some(exporter), Some(transport)) => {
-      let report = exporter.flush()
+  match (spans, metrics, connected) {
+    (Some(spans), Some(metrics), Some(transport)) => {
+      let span_report = spans.flush()
+      let metric_report = metrics.flush()
       transport.close()
       println(
-        "OTLP/gRPC: delivered \{report.delivered}, rejected \{report.rejected}, dropped \{report.dropped}, requests \{report.attempts}",
+        "OTLP/gRPC spans: delivered \{span_report.delivered}, rejected \{span_report.rejected}, dropped \{span_report.dropped}, requests \{span_report.attempts}",
       )
-      if required && report.delivered == 0 {
-        abort("no span reached the collector at \{address}")
+      println(
+        "OTLP/gRPC metrics: delivered \{metric_report.delivered}, rejected \{metric_report.rejected}, dropped \{metric_report.dropped}, requests \{metric_report.attempts}",
+      )
+      if required &&
+        (span_report.delivered == 0 || metric_report.delivered == 0) {
+        abort("a signal did not reach the collector at \{address}")
       }
     }
-    _ => println("no spans were exported: this run had no collector")
+    _ => println("nothing was exported: this run had no collector")
   }
 }
