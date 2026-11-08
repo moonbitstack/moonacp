@@ -48,11 +48,18 @@ jobs:
         run: |
           moon build --target native src/examples/04-otel
 
+      # `gh release download` goes through the API rather than the download redirect, which is the
+      # path that answers 504 when the release CDN is unhappy. The digest is the release's own, so a
+      # body that arrived is the release and not an error page with a 200 on it.
       - name: install weaver
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          url="https://github.com/open-telemetry/weaver/releases/download/v${WEAVER_VERSION}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          rm -f "$RUNNER_TEMP/weaver.tar.xz"
           for attempt in 1 2 3 4 5; do
-            curl -fsSL --max-time 120 -o "$RUNNER_TEMP/weaver.tar.xz" "$url" || true
+            gh release download "v${WEAVER_VERSION}" --repo open-telemetry/weaver \
+              --pattern 'weaver-x86_64-unknown-linux-gnu.tar.xz' \
+              --output "$RUNNER_TEMP/weaver.tar.xz" --clobber || true
             if echo "$WEAVER_SHA256  $RUNNER_TEMP/weaver.tar.xz" | sha256sum -c --status -; then
               break
             fi
