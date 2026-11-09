@@ -184,7 +184,7 @@ a tracer and record one observation of `gen_ai.invoke_agent.duration` or
 let transport = @grpc.GrpcTransport::connect(host="127.0.0.1", port=4317)
 let metrics = @otlp.MetricsExporter::new(
   transport~,
-  format=@otlp.BodyFormat::Protobuf,
+  encoding=@binary.protobuf,
   now=@async.now,
   rand=width => Bytes::make(width, b'\x21'),
 )

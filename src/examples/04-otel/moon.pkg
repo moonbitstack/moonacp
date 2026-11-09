@@ -20,6 +20,7 @@ import {
   "moonbitstack/moonseed",
   "moonbitstack/moonseed/system",
   "moonbitstack/moontel/otlp",
+  "moonbitstack/moontel/otlp/binary",
   "moonbitstack/moontel/otlp/grpc",
   "moonbitstack/moontel/trace",
 }

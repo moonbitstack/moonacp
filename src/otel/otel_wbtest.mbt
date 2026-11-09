@@ -414,7 +414,7 @@ fn exporter(sink : Exports) -> @otlp.MetricsExporter {
   @otlp.MetricsExporter::new(
     transport=sink,
     endpoint="http://collector.example/v1/metrics",
-    format=@otlp.BodyFormat::Json,
+    encoding=@otlp.json,
     now=millis,
     rand=patterns,
     attempts=1,

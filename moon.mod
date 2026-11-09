@@ -58,5 +58,5 @@ import {
   "moonbitstack/moonjson@0.4.3",
   "moonbitstack/moonnet@0.1.11",
   "moonbitstack/moonseed@0.1.1",
-  "moonbitstack/moontel@0.1.1",
+  "moonbitstack/moontel@0.1.2",
 }
