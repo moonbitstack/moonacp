@@ -1,0 +1,14 @@
+// The playground's engine: this library built to JavaScript, so the page calls it rather than
+// describing it. Strings and JSON in, JSON out. It exists for the site, so it is not one of the
+// library's packages and its API is not in the reference. Only js has a module a page can import.
+supported_targets = "js"
+
+import {
+  "moonbitlang/core/json",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonjson",
+}
+
+options(
+  link: { "js": { "exports": [ "preview" ], "format": "esm" } },
+)
