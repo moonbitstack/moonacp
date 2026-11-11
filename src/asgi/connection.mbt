@@ -112,7 +112,7 @@ fn Routes::open_scope(
 /// Sends a message on its way: to the POST waiting for it, else to the stream of its session when
 /// that stream is open, else to the connection's stream.
 fn Routes::deliver(self : Routes, text : String) -> Unit {
-  let json = @json.parse(text) catch { _ => return }
+  let json = @moonjson.loads(text, @moonjson.strict) catch { _ => return }
   if id_of(json) is Some(key) {
     if self.waiting.get(key) is Some(queue) {
       offer(queue, text)
@@ -203,7 +203,7 @@ async fn Connection::pump(self : Connection, agent : &@moonacp.Agent) -> Unit {
 /// Takes a POST body in. A request names the session it belongs to, so its answer finds the right
 /// stream.
 async fn Connection::post(self : Connection, text : String) -> Unit {
-  let json = @json.parse(text) catch { _ => return }
+  let json = @moonjson.loads(text, @moonjson.strict) catch { _ => return }
   if json is Object(fields) {
     if fields.get("id") is Some(id) {
       let key = id_key(id)

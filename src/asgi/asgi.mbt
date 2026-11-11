@@ -302,7 +302,7 @@ async fn handle_post(
       return
     }
   }
-  let parsed = @json.parse(body) catch {
+  let parsed = @moonjson.loads(body, @moonjson.strict) catch {
     _ => {
       respond(send, 400, [], bare_error(@moonacp.parse_error, "Parse error"))
       return
@@ -390,7 +390,7 @@ async fn initialize(
   limits : Limits,
 ) -> Unit {
   let connection = Connection::new(registry.name(), limits)
-  let key = @json.parse(body) catch { _ => return }
+  let key = @moonjson.loads(body, @moonjson.strict) catch { _ => return }
   let waited = match id_of(key) {
     Some(key) => key
     None => "null"
