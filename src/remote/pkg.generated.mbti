@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonacp/remote"
+
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/aqueue",
+  "moonbitlang/core/ref",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonfetch",
+}
+
+// Values
+pub fn open(&@moonacp.Client, String, headers? : Array[(String, String)], timeout? : Int32) -> Remote raise @moonacp.Refused
+
+pub let stream_ms : Int32
+
+// Errors
+
+// Types and methods
+pub struct Remote {
+  http : @moonfetch.Client
+  url : String
+  headers : Array[(String, String)]
+  timeout : Int32
+  inbound : @aqueue.Queue[String]
+  mut connection : String
+  mut common : @moonfetch.Stream?
+  mut sessions : Map[String, @moonfetch.Stream]
+  buffers : Map[String, Bytes]
+  mut closed : Bool
+  group : @ref.Ref[@async.TaskGroup[Unit]?]
+  conn : @ref.Ref[@moonacp.Conn?]
+}
+pub async fn Remote::close(Self) -> Unit
+pub fn Remote::conn(Self) -> @moonacp.Conn
+pub async fn Remote::run(Self) -> Unit
+
+// Type aliases
+
+// Traits

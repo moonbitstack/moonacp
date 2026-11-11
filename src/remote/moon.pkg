@@ -1,0 +1,20 @@
+// The remote transport from the editor's side: one endpoint, a stream of answers, and POSTs that
+// carry what the editor says.
+//
+// https://agentclientprotocol.com/rfds/streamable-http-websocket-transport (revision of
+// 2026-11-04, status Active, not yet final). The server half is `moonacp/asgi`.
+//
+// A transport is a socket and a task, and the HTTP client it is built on goes where those exist:
+// native, wasm, and in a browser. wasm-gc has neither, so this package is not built for it.
+supported_targets = "native+wasm+js"
+
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/aqueue",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonfetch",
+  "moonbitstack/moonjson",
+  "moonbitstack/moonhttp/method",
+  "moonbitstack/moonjrpc/peer",
+}

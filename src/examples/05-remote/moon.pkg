@@ -1,0 +1,13 @@
+// A client that reaches an agent across the network: `moon run src/examples/05-remote --target
+// native -- <url>`. It is what the interop runs drive another implementation with, from the
+// editor's side rather than the agent's.
+supported_targets = "+native"
+
+import {
+  "moonbitlang/async",
+  "moonbitstack/moonacp",
+  "moonbitstack/moonacp/remote",
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")
