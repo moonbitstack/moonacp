@@ -1,0 +1,15 @@
+[package]
+name = "acp-http-agent"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# The official SDK, pinned: a green run means the same thing tomorrow.
+[dependencies]
+agent-client-protocol = "=5.0.0"
+agent-client-protocol-http = { version = "=5.0.0", features = ["server"] }
+axum = "0.8"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread"] }
+
+[profile.dev]
+debug = 0

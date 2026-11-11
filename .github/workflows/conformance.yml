@@ -118,3 +118,39 @@ jobs:
         run: |
           cargo build --release --manifest-path scripts/interop/rust-http-client/Cargo.toml
           ./scripts/interop/rust-http-client/target/release/acp-http-interop "$HTTP_AGENT"
+
+      # The other direction, against the address the server printed: the client here is this
+      # library's, and the agent is the one the official SDK ships.
+      - name: this library's client, over HTTP, against this library's server
+        run: |
+          CLIENT=$(find _build/native/debug/build -name '05-remote*' -type f -perm -u+x | head -1)
+          echo "the client is $CLIENT"
+          port=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
+          "$HTTP_AGENT" "$port" > "$RUNNER_TEMP/moonacp-server.log" 2>&1 &
+          server=$!
+          for attempt in $(seq 1 60); do
+            grep -q "serving on" "$RUNNER_TEMP/moonacp-server.log" && break
+            sleep 1
+          done
+          timeout 60 "$CLIENT" "http://127.0.0.1:$port/acp" | tee moonacp-http-report.txt
+          kill "$server" 2>/dev/null || true
+          grep -q "stop: end_turn" moonacp-http-report.txt
+          grep -q "answer: you said: hello from a MoonBit client" moonacp-http-report.txt
+
+      # And the same client against the official SDK's agent, which is the direction the first
+      # run below could not cover: their client reaching our server says nothing about ours.
+      - name: this library's client, over HTTP, against the official Rust agent
+        run: |
+          CLIENT=$(find _build/native/debug/build -name '05-remote*' -type f -perm -u+x | head -1)
+          cargo build --release --manifest-path scripts/interop/rust-http-agent/Cargo.toml
+          port=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
+          ./scripts/interop/rust-http-agent/target/release/acp-http-agent "$port" > "$RUNNER_TEMP/rust-agent.log" 2>&1 &
+          agent=$!
+          for attempt in $(seq 1 60); do
+            grep -q "serving on" "$RUNNER_TEMP/rust-agent.log" && break
+            sleep 1
+          done
+          timeout 60 "$CLIENT" "http://127.0.0.1:$port/acp" | tee rust-agent-http-report.txt
+          kill "$agent" 2>/dev/null || true
+          grep -q "stop: end_turn" rust-agent-http-report.txt
+          grep -q "answer: rust echo: hello from a MoonBit client" rust-agent-http-report.txt
