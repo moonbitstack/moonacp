@@ -445,3 +445,119 @@ test "an absolute request target is routed by its path" {
   assert_eq(path_of("http://example.com"), "/")
   assert_eq(path_of("/acp?x=1"), "/acp?x=1")
 }
+
+///|
+async test "a session's answer goes to the connection stream when no session stream is open" {
+  let agent = Echo::{ sessions: 0, }
+  let app = to_asgi(agent)
+  let common = Side::new()
+  @async.with_task_group(async fn(group) {
+    let (_, headers, _) = post(
+      app,
+      group,
+      "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":1}}",
+      [("content-type", "application/json")],
+    )
+    let connection = match header_of(headers, "acp-connection-id") {
+      Some(id) => id
+      None => abort("no connection id")
+    }
+    common.start(
+      app,
+      group,
+      http_scope("GET", [
+        ("accept", "text/event-stream"),
+        ("acp-connection-id", connection),
+      ]),
+    )
+    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    guard common.outbox.get() is HttpResponseStart(..) else {
+      abort("no stream")
+    }
+    let (status, _, _) = post(
+      app,
+      group,
+      "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"session/new\",\"params\":{\"cwd\":\"/work\",\"mcpServers\":[]}}",
+      [("content-type", "application/json"), ("acp-connection-id", connection)],
+    )
+    assert_eq(status, 202)
+    let new_session = payload(frame(common))
+    assert_true(new_session.contains("\"s-1\""))
+    // No session stream is opened: the turn's update and its answer have nowhere to go but the
+    // connection's own stream.
+    let (status, _, _) = post(
+      app,
+      group,
+      "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"session/prompt\",\"params\":{\"sessionId\":\"s-1\",\"prompt\":[{\"type\":\"text\",\"text\":\"hi\"}]}}",
+      [
+        ("content-type", "application/json"),
+        ("acp-connection-id", connection),
+        ("acp-session-id", "s-1"),
+      ],
+    )
+    assert_eq(status, 202)
+    let update = payload(frame(common))
+    assert_true(update.contains("agent_message_chunk"))
+    let answer = payload(frame(common))
+    assert_true(answer.contains("end_turn"))
+    common.inbox.put(HttpDisconnect) catch {
+      _ => ()
+    }
+  })
+}
+
+///|
+async test "a DELETE ends the stream the connection holds open" {
+  let agent = Echo::{ sessions: 0, }
+  let app = to_asgi(agent)
+  let common = Side::new()
+  @async.with_task_group(async fn(group) {
+    let (_, headers, _) = post(
+      app,
+      group,
+      "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":1}}",
+      [("content-type", "application/json")],
+    )
+    let connection = match header_of(headers, "acp-connection-id") {
+      Some(id) => id
+      None => abort("no connection id")
+    }
+    common.start(
+      app,
+      group,
+      http_scope("GET", [
+        ("accept", "text/event-stream"),
+        ("acp-connection-id", connection),
+      ]),
+    )
+    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    guard common.outbox.get() is HttpResponseStart(..) else {
+      abort("no stream")
+    }
+    let closing = Side::new()
+    closing.start(
+      app,
+      group,
+      http_scope("DELETE", [("acp-connection-id", connection)]),
+    )
+    closing.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    guard closing.outbox.get() is HttpResponseStart(status~, ..) else {
+      abort("no answer")
+    }
+    assert_eq(status, 202)
+    // The stream the connection holds ends on its own, without the client disconnecting it: the
+    // last body event is the empty one that says there is no more.
+    let mut ended = false
+    while !ended {
+      match common.outbox.get() {
+        HttpResponseBody(body~, more_body=false) => {
+          assert_eq(body.length(), 0)
+          ended = true
+        }
+        // A keepalive may have gone out before the end.
+        HttpResponseBody(..) => ()
+        _ => abort("the stream did not end")
+      }
+    }
+  })
+}

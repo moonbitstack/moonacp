@@ -97,8 +97,20 @@ fn Routes::scope(self : Routes, session_id : String) -> @aqueue.Queue[String] {
 }
 
 ///|
-/// Sends a message on its way: to the POST waiting for it, else to the stream of its session, else
-/// to the connection's stream.
+/// The stream of a session, when the client has one open. A message for a session whose stream is
+/// not open goes to the connection's own stream instead: an answer must not be lost because a
+/// client chose to read one stream rather than one per session, which is what the transport's own
+/// rules say happens.
+fn Routes::open_scope(
+  self : Routes,
+  session_id : String,
+) -> @aqueue.Queue[String]? {
+  self.scopes.get(session_id)
+}
+
+///|
+/// Sends a message on its way: to the POST waiting for it, else to the stream of its session when
+/// that stream is open, else to the connection's stream.
 fn Routes::deliver(self : Routes, text : String) -> Unit {
   let json = @json.parse(text) catch { _ => return }
   if id_of(json) is Some(key) {
@@ -107,20 +119,24 @@ fn Routes::deliver(self : Routes, text : String) -> Unit {
       return
     }
   }
-  let session = session_of(json)
   if self.unified {
     offer(self.common, text)
     return
   }
+  let session = session_of(json)
   if id_of(json) is Some(key) {
     if self.owners.get(key) is Some(session_id) {
-      offer(self.scope(session_id), text)
-      return
+      if self.open_scope(session_id) is Some(queue) {
+        offer(queue, text)
+        return
+      }
     }
   }
   if session is Some(session_id) {
-    offer(self.scope(session_id), text)
-    return
+    if self.open_scope(session_id) is Some(queue) {
+      offer(queue, text)
+      return
+    }
   }
   offer(self.common, text)
 }

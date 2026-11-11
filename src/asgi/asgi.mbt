@@ -131,15 +131,21 @@ async fn stream_out(
     _ => ()
   }
   @async.with_task_group(async fn(group) {
-    group.spawn_bg(async fn() {
-      while true {
-        match receive() {
-          HttpDisconnect => break
-          _ => ()
+    // The watcher is not waited for: the queue can be closed by something else — a DELETE, the
+    // connection ending — and then nothing is ever going to arrive on `receive` to wake it. Left
+    // waited for, it would hold this response open after the stream has ended.
+    group.spawn_bg(
+      async fn() {
+        while true {
+          match receive() {
+            HttpDisconnect => break
+            _ => ()
+          }
         }
-      }
-      queue.close()
-    })
+        queue.close()
+      },
+      no_wait=true,
+    )
     while true {
       let message = @async.with_timeout_opt(keepalive_ms, () => queue.get()) catch {
         _ => break
