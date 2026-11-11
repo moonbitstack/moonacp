@@ -30,6 +30,21 @@ jobs:
         run: |
           python scripts/gen_api.py --check
 
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      # The playground calls the library, so the library is built here and the artifact is served
+      # beside the pages. It is not committed: this step is what makes it exist.
+      - name: the playground's engine
+        run: |
+          moon version --all
+          moon update
+          moon build --target js src/examples/browser
+          mkdir -p docs/engine
+          cp _build/js/debug/build/examples/browser/browser.js docs/engine/browser.js
+
       - uses: actions/configure-pages@v6
         with:
           enablement: true

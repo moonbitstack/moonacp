@@ -122,6 +122,35 @@ async fn main {
 }
 ```
 
+## Reach an agent across the network
+
+`@remote` is the editor's side of the HTTP transport, for an agent that is not a child process.
+`open` sends nothing; the first message is what connects, `run` is what receives, and `close` ends
+the exchange on both sides.
+
+```moonbit native
+async fn reach_agent(screen : &@moonacp.Client, url : String) -> Unit raise {
+  let remote = @remote.open(screen, url)
+  let conn = remote.conn()
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { remote.run() })
+    let answer = conn.prompt({
+      session_id: "s-1",
+      prompt: [
+        @moonacp.ContentBlock::Text({ text: "hi", annotations: None, meta: None }),
+      ],
+      meta: None,
+    })
+    println(answer.stop_reason.to_string())
+    remote.close()
+  })
+}
+```
+
+A server may keep one stream per session, so the transport opens a session's stream before the call
+that needs it and reads that stream while the call is outstanding. That is why `run` has to be
+running in its own task: it is the task that reads every stream.
+
 ## Asking the user, and the things that can say no
 
 `session/request_permission`, `fs/*`, `terminal/*` and `elicitation/create` are all requests the
@@ -209,6 +238,8 @@ ignore(measured)
   method, so a capability does not disappear because a span was added around it.
 - A turn that fails ends its span as an error and still fails the caller; a turn that is cancelled
   ends as `Ok` with `cancelled` among its finish reasons.
+- Over HTTP, a session-scoped call is answered on that session's stream: the transport opens it
+  first. Closing a connection without `close` leaves the server holding it until its own timeout.
 - The metric and the span measure the same call, so a backend that has both should see one duration,
   not two. The conversation is not an attribute of either histogram: only the agent is, which keeps
   the series count from growing with every session.

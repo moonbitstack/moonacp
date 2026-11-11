@@ -56,6 +56,7 @@
           <a href="#moonacp"><code>moonacp</code></a>
 <a href="#moonacp-stdio"><code>moonacp/stdio</code></a>
 <a href="#moonacp-asgi"><code>moonacp/asgi</code></a>
+<a href="#moonacp-remote"><code>moonacp/remote</code></a>
 <a href="#moonacp-otel"><code>moonacp/otel</code></a>
         </nav>
         <footer>Schema v1.29.1. Transport RFD of 2026-11-04.</footer>
@@ -333,6 +334,21 @@ several agents can be mounted side by side.</p></div></div></article>
 half a minute for <code>initialize</code>.</p></div></div></article>
 <h3 class="group" id="moonacp-asgi-types-and-methods"><span class="label">Types and methods</span><span class="rule"></span><span class="count">1</span></h3>
 <article class="item" id="moonacp-asgi-4"><div class="entry-name"><span class="kind struct">type</span><code>Limits</code></div><div class="entry-body"><div class="doc"><p>The transport&#x27;s bounds.</p></div></div></article></section>
+<section class="package" id="moonacp-remote"><h2><code>moonacp/remote</code><span class="count">6 items</span></h2><p class="blurb">Reaching an agent over HTTP, from the editor&#x27;s side.</p><h3 class="group" id="moonacp-remote-values"><span class="label">Values</span><span class="rule"></span><span class="count">5</span></h3>
+<article class="item" id="moonacp-remote-1"><div class="entry-name"><span class="kind value">let</span><code>stream_ms</code></div><div class="entry-body"><div class="sig"><code>: Int32 = 60000</code></div><div class="doc"><p>How long a stream may go without a byte before the transport calls the connection dead. The
+server writes a comment every fifteen seconds, so a minute of silence is nobody holding it.</p></div></div></article>
+<article class="item" id="moonacp-remote-2"><div class="entry-name"><span class="kind function">fn</span><code>open</code></div><div class="entry-body"><div class="sig"><code>( client : &amp;@moonacp.Client, url : String, headers? : Array[(String, String)], timeout? : Int32, ) -&gt; </code><code class="ret">Remote raise @moonacp.Refused</code></div><div class="doc"><p>Talks to the agent at <code>url</code>, which is the endpoint itself — the path the server mounted the
+application on, <code>/acp</code> by default. <code>headers</code> go on every request the transport makes, for a
+deployment behind a proxy that wants a token of its own.</p>
+<p>Nothing is sent until the first message: opening a connection does no I/O, so a program can
+build it before the network is there, and <code>initialize</code> is what fails when it is not.</p></div></div></article>
+<article class="item" id="moonacp-remote-3"><div class="entry-name"><span class="kind function">fn</span><code>Remote::conn</code></div><div class="entry-body"><div class="sig"><code>(self : Remote) -&gt; </code><code class="ret">@moonacp.Conn</code></div><div class="doc"><p>The connection to talk through, for the calls this side makes.</p></div></div></article>
+<article class="item" id="moonacp-remote-4"><div class="entry-name"><span class="kind function">fn</span><code>Remote::run</code></div><div class="entry-body"><div class="sig"><code>(self : Remote) -&gt; </code><code class="ret">Unit</code></div><div class="doc"><p>Runs the connection until it ends: what the agent says arrives while this runs, and <code>close</code> (or
+the stream ending) is what returns from it. Run it in a task of its own, as with every other
+transport.</p></div></div></article>
+<article class="item" id="moonacp-remote-5"><div class="entry-name"><span class="kind function">fn</span><code>Remote::close</code></div><div class="entry-body"><div class="sig"><code>(self : Remote) -&gt; </code><code class="ret">Unit</code></div><div class="doc"><p>Ends the connection: the server drops what it holds for it, and the streams end.</p></div></div></article>
+<h3 class="group" id="moonacp-remote-types-and-methods"><span class="label">Types and methods</span><span class="rule"></span><span class="count">1</span></h3>
+<article class="item" id="moonacp-remote-7"><div class="entry-name"><span class="kind struct">type</span><code>Remote</code></div><div class="entry-body"><div class="doc"><p>A connection to an agent across the network: the value <code>open</code> hands back.</p></div></div></article></section>
 <section class="package" id="moonacp-otel"><h2><code>moonacp/otel</code><span class="count">6 items</span></h2><p class="blurb">Tracing both sides with the OpenTelemetry GenAI conventions.</p><h3 class="group" id="moonacp-otel-values"><span class="label">Values</span><span class="rule"></span><span class="count">5</span></h3>
 <article class="item" id="moonacp-otel-1"><div class="entry-name"><span class="kind function">fn</span><code>metered</code></div><div class="entry-body"><div class="sig"><code>( agent : &amp;@moonacp.Agent, exporter : @otlp.MetricsExporter, options~ : Options = options, ) -&gt; </code><code class="ret">&amp;@moonacp.Agent</code></div><div class="doc"><p>Wraps an agent so that each turn it runs is one observation of
 <code>gen_ai.invoke_agent.duration</code>, handed to <code>exporter</code>.</p>
@@ -380,6 +396,7 @@ editor holds no such answer, so its wrapper is told them instead. Leaving a name
             <a href="#moonacp"><code>moonacp</code></a><a class="sub" href="#moonacp-values">Values<em>83</em></a><a class="sub" href="#moonacp-errors">Errors<em>1</em></a><a class="sub" href="#moonacp-types-and-methods">Types and methods<em>117</em></a><a class="sub" href="#moonacp-traits">Traits<em>2</em></a>
 <a href="#moonacp-stdio"><code>moonacp/stdio</code></a><a class="sub" href="#moonacp-stdio-values">Values<em>4</em></a><a class="sub" href="#moonacp-stdio-types-and-methods">Types and methods<em>1</em></a>
 <a href="#moonacp-asgi"><code>moonacp/asgi</code></a><a class="sub" href="#moonacp-asgi-values">Values<em>2</em></a><a class="sub" href="#moonacp-asgi-types-and-methods">Types and methods<em>1</em></a>
+<a href="#moonacp-remote"><code>moonacp/remote</code></a><a class="sub" href="#moonacp-remote-values">Values<em>5</em></a><a class="sub" href="#moonacp-remote-types-and-methods">Types and methods<em>1</em></a>
 <a href="#moonacp-otel"><code>moonacp/otel</code></a><a class="sub" href="#moonacp-otel-values">Values<em>5</em></a><a class="sub" href="#moonacp-otel-types-and-methods">Types and methods<em>1</em></a>
           </nav>
         </div>

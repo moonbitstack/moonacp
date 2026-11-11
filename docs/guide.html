@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guide — MoonACP</title>
+    <meta
+      name="description"
+      content="A working guide to the Agent Client Protocol in MoonBit: an agent, an editor, the requests a turn makes, the network transport, and what a run writes down."
+    />
+    <link rel="stylesheet" href="site.css" />
+    <script>
+      try {
+        const theme = localStorage.getItem("moonacp-theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        for (const side of ["nav", "rail"]) {
+          const width = Number(localStorage.getItem(`moonacp-${side}-w`));
+          if (Number.isFinite(width) && width >= 160 && width <= 600) {
+            document.documentElement.style.setProperty(`--${side}-w`, `${width}px`);
+          }
+        }
+      } catch (error) {
+        // Storage is off; the platform's own preference, and the default widths, still apply.
+      }
+    </script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div class="brand">
+          <span>MoonACP<small>Agent Client Protocol</small></span>
+          <button
+            class="theme-toggle"
+            type="button"
+            aria-label="Switch to dark theme"
+            title="Click to switch, double-click to follow the system"
+            aria-pressed="false"
+          >
+            <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <circle cx="8" cy="8" r="3.1" />
+              <path d="M8 1.4v1.7M8 12.9v1.7M1.4 8h1.7M12.9 8h1.7M3.3 3.3l1.2 1.2M11.5 11.5l1.2 1.2M12.7 3.3l-1.2 1.2M4.5 11.5l-1.2 1.2" stroke-linecap="round" />
+            </svg>
+            <svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M13.4 9.9A5.7 5.7 0 0 1 6.1 2.6a5.7 5.7 0 1 0 7.3 7.3Z" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <nav>
+          <p>Start</p>
+          <a href="index.html">Overview</a>
+          <a href="guide.html" aria-current="page">Guide</a>
+          <a href="index.html#consistency">Consistency</a>
+          <p>In this guide</p>
+          <a href="#install">Install</a>
+          <a href="#agent">An agent</a>
+          <a href="#serve">Serve it</a>
+          <a href="#editor">An editor</a>
+          <a href="#turn">Inside a turn</a>
+          <a href="#network">Over the network</a>
+          <a href="#traces">Traces and metrics</a>
+          <a href="#failures">Failures</a>
+          <p>Reference</p>
+          <a href="api.html">API reference</a>
+          <a href="playground.html">Playground</a>
+        </nav>
+        <footer>Schema v1.29.1. Transport RFD of 2026-11-04.</footer>
+      </aside>
+      <div
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize the sidebar"
+        title="Drag to resize, double-click to reset"
+        aria-valuemin="184"
+        aria-valuemax="380"
+        aria-valuenow="244"
+        data-resize="nav"
+        tabindex="0"
+      ></div>
+
+      <main>
+        <span class="eyebrow">Guide</span>
+        <h1>From an empty project<br /><span class="thin">to a conversation</span></h1>
+        <p class="lede">
+          This walks through the whole library once: an agent that answers, the editor that launches
+          it, the requests a turn is allowed to make, the same conversation over a network, and what
+          a run writes down. Every block on this page compiles as written.
+        </p>
+
+        <h2 id="install">Install</h2>
+        <p>
+          One module, four packages: the protocol itself, and a transport for each way a client
+          reaches an agent.
+        </p>
+        <pre><code class="lang-sh">moon add moonbitstack/moonacp</code></pre>
+        <p>
+          <code>moonbitstack/moonacp</code> holds the types and the two contracts;
+          <code>moonacp/stdio</code> serves an agent on a pipe, <code>moonacp/asgi</code> over HTTP
+          streams, <code>moonacp/remote</code> connects to one, and <code>moonacp/otel</code> writes
+          the traces and metrics of a conversation.
+        </p>
+
+        <h2 id="agent">An agent, in three methods</h2>
+        <p>
+          An agent is a value with three required methods. Everything else — authentication, loading
+          an old session, modes, config options, closing — has a default that reports itself as
+          unsupported, so an agent advertises exactly what it answers and no more.
+        </p>
+<pre><code class="lang-mbt native">struct Notes {
+  mut sessions : Int32
+}
+
+impl @moonacp.Agent for Notes with fn initialize(self, request) {
+  ignore(self)
+  ignore(request)
+  {
+    ..@moonacp.Initialized::new(),
+    capabilities: {
+      ..@moonacp.AgentCapabilities::none(),
+      prompt: { image: false, audio: false, embedded_context: true, meta: None },
+    },
+    agent_info: Some(@moonacp.Implementation::new("notes", "0.1.0")),
+  }
+}
+
+impl @moonacp.Agent for Notes with fn new_session(self, request) {
+  ignore(request)
+  self.sessions = self.sessions + 1
+  { session_id: "notes-\{self.sessions}", modes: None, config_options: None, meta: None }
+}
+
+impl @moonacp.Agent for Notes with fn prompt(self, request, session) {
+  let asked = request.prompt.map(block => match block {
+    @moonacp.ContentBlock::Text(content) => content.text
+    _ => ""
+  }).join(" ")
+  session.update(@moonacp.SessionUpdate::AgentMessageChunk({
+    content: @moonacp.ContentBlock::Text({
+      text: "You said: " + asked,
+      annotations: None,
+      meta: None,
+    }),
+    message_id: None,
+    meta: None,
+  }))
+  @moonacp.StopReason::EndTurn
+}</code></pre>
+        <p>
+          The third method is where the work happens, and its last value is why the turn stopped:
+          the model finished, the user cancelled it, the token budget ran out, or the agent refused.
+        </p>
+
+        <h2 id="serve">Serve it on a pipe</h2>
+        <p>
+          An editor launches an agent as a child process and talks to it on the child's standard
+          input and output: one JSON-RPC message per line, nothing else on stdout. That is the
+          transport the protocol settled first, and one call serves an agent on it.
+        </p>
+<pre><code class="lang-mbt native">async fn serve_notes() -> Unit {
+  @stdio.serve_stdio(Notes::{ sessions: 0 })
+}</code></pre>
+        <p>
+          Run it directly and it waits for an editor:
+        </p>
+<pre><code class="lang-sh">moon run src/main --target native</code></pre>
+
+        <h2 id="editor">An editor, in one connection</h2>
+        <p>
+          The other side implements <code>Client</code>: what the editor does when a turn produces a
+          chunk, when the agent asks permission, when it wants a file or a terminal. The connection
+          runs in a task of its own; the calls this side makes are answered from there.
+        </p>
+        <p>
+          This client starts the agent above as a child process, opens a session, and runs one turn.
+          Every line it prints is real output:
+        </p>
+<pre><code class="lang-mbt native">struct Printer {
+  mut text : String
+}
+
+impl @moonacp.Client for Printer with fn update(self, id, update) {
+  ignore(id)
+  match update {
+    @moonacp.SessionUpdate::AgentMessageChunk(chunk) =>
+      if chunk.content is @moonacp.ContentBlock::Text(content) {
+        self.text = self.text + content.text
+      }
+    _ => ()
+  }
+}
+
+impl @moonacp.Client for Printer with fn request_permission(self, ask) {
+  ignore(self)
+  match ask.options {
+    [] => @moonacp.Outcome::Cancelled
+    [first, ..] => @moonacp.Outcome::Selected(first.option_id)
+  }
+}
+
+async fn main {
+  let printer = Printer::{ text: "", }
+  let child = @stdio.spawn(printer, ["/usr/local/bin/notes"])
+  let conn = child.conn()
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { conn.run() })
+    let started = conn.initialize({
+      protocol_version: @moonacp.protocol_version,
+      client_capabilities: @moonacp.ClientCapabilities::none(),
+      client_info: Some(@moonacp.Implementation::new("my-editor", "0.1.0")),
+      meta: None,
+    })
+    println("agent: \{started.agent_info.map(info => info.name).unwrap_or("unnamed")}")
+    let session = conn.new_session({
+      cwd: "/work",
+      additional_directories: None,
+      mcp_servers: [],
+      meta: None,
+    })
+    println("session: \{session.session_id}")
+    let answer = conn.prompt({
+      session_id: session.session_id,
+      prompt: [
+        @moonacp.ContentBlock::Text({ text: "hello", annotations: None, meta: None }),
+      ],
+      meta: None,
+    })
+    println("stop: \{answer.stop_reason.to_string()}")
+    println("answer: \{printer.text}")
+  })
+  child.close()
+}</code></pre>
+        <p>Against the notes agent this example prints:</p>
+<pre><code class="lang-text">agent: notes
+session: notes-1
+stop: end_turn
+answer: You said: hello</code></pre>
+        <p>
+          A turn that the editor cancels ends with <code>cancelled</code> as its stop reason, and the
+          agent stops at its next interruption rather than running to the end. Cancel is a
+          notification, not a call: the answer to <code>prompt</code> is the one that comes back.
+        </p>
+
+        <h2 id="turn">Inside a turn</h2>
+        <p>
+          The <code>Session</code> a turn is handed is the way back to the editor. Each of these is a
+          request the editor answers, and each is only sent when the editor said it could answer it —
+          a client that never advertised file access answers <code>-32601</code>.
+        </p>
+<pre><code class="lang-mbt native">struct Tools {
+  mut allowed : Int32
+}
+
+impl @moonacp.Agent for Tools with fn initialize(self, request) {
+  ignore(self)
+  ignore(request)
+  @moonacp.Initialized::new()
+}
+
+impl @moonacp.Agent for Tools with fn new_session(self, request) {
+  ignore(request)
+  { session_id: "tools-1", modes: None, config_options: None, meta: None }
+}
+
+impl @moonacp.Agent for Tools with fn prompt(self, request, session) {
+  ignore(request)
+  // Permission is the one every agent uses: it names the tool call, offers the options the editor
+  // draws, and reads back the one the user picked.
+  let outcome = session.request_permission({
+    tool_call: {
+      tool_call_id: "c-1",
+      kind: None,
+      status: None,
+      title: Some("write /work/notes.md"),
+      name: None,
+      content: None,
+      locations: None,
+      raw_input: None,
+      raw_output: None,
+      meta: None,
+    },
+    options: [
+      {
+        option_id: "allow",
+        name: "Allow once",
+        kind: @moonacp.PermissionOptionKind::AllowOnce,
+        meta: None,
+      },
+      {
+        option_id: "no",
+        name: "No",
+        kind: @moonacp.PermissionOptionKind::RejectOnce,
+        meta: None,
+      },
+    ],
+    meta: None,
+  })
+  match outcome {
+    @moonacp.Outcome::Selected(_) => self.allowed = self.allowed + 1
+    @moonacp.Outcome::Cancelled => ()
+  }
+  // A file is read and written through the editor, which is where the user's view of it lives.
+  let notes = session.read_text_file("/work/notes.md")
+  session.write_text_file("/work/notes.md", notes + "\n- one more")
+  // A terminal is opened once and read until it exits, so a long build does not need the turn to
+  // hold everything it printed.
+  let terminal = session.terminal("cargo", args=["test"], cwd="/work")
+  let printed = terminal.output()
+  println(printed.output)
+  ignore(terminal.wait())
+  terminal.release()
+  @moonacp.StopReason::EndTurn
+}</code></pre>
+        <p>
+          Reading the answer of a permission request is the one place a turn's shape is decided by a
+          person: <code>Selected</code> carries the option they picked, and
+          <code>Cancelled</code> means the prompt was dismissed. Either way the agent decides what
+          to do next, and the turn ends with the reason it stopped.
+        </p>
+
+        <h2 id="network">Over the network</h2>
+        <p>
+          The same agent, reached over HTTP instead of a pipe: <code>to_asgi</code> returns an
+          application any ASGI server can run, with one endpoint that carries the whole connection.
+        </p>
+<pre><code class="lang-mbt native">let app = @asgi.to_asgi(Notes::{ sessions: 0 })</code></pre>
+        <p>
+          The client side of that transport is <code>@remote.open</code>. Opening it does no I/O:
+          the first message is what connects, and the answer to <code>initialize</code> is what
+          names the connection.
+        </p>
+<pre><code class="lang-mbt native">struct Silent {
+}
+
+impl @moonacp.Client for Silent with fn update(self, id, update) {
+  ignore(self)
+  ignore(id)
+  ignore(update)
+}
+
+impl @moonacp.Client for Silent with fn request_permission(self, ask) {
+  ignore(self)
+  ignore(ask)
+  @moonacp.Outcome::Cancelled
+}
+
+async fn drive_remote() -> Unit {
+  let remote = @remote.open(Silent::{ }, "http://127.0.0.1:12000/acp")
+  let conn = remote.conn()
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { remote.run() })
+    ignore(conn.initialize({
+      protocol_version: @moonacp.protocol_version,
+      client_capabilities: @moonacp.ClientCapabilities::none(),
+      client_info: None,
+      meta: None,
+    }))
+    remote.close()
+  })
+}</code></pre>
+        <p>
+          <code>run</code> is what receives: every stream the connection opens is read by a task of
+          its own, because the HTTP client underneath reads one stream per task. <code>close</code>
+          ends the exchange on the server as well, which is what releases the connection there.
+        </p>
+
+        <h2 id="traces">Traces and metrics</h2>
+        <p>
+          <code>@otel</code> wraps either side, so a program that already has a collector gets a
+          record of the conversation without writing instrumentation of its own. A turn becomes one
+          span and one observation of a duration; each file or terminal request becomes one more.
+        </p>
+<pre><code class="lang-mbt native">let tracer = @trace.Tracer::new(
+  rand=width => Bytes::make(width, b'\x21'),
+  sink=@trace.Recorder::new(),
+  sampler=@trace.always,
+)
+@stdio.serve_stdio(@otel.traced(Notes::{ sessions: 0 }, tracer))</code></pre>
+        <p>
+          The two wrappers compose, so one line gets both signals:
+          <code>@otel.metered(@otel.traced(agent, tracer), metrics)</code>. Every name they write —
+          of a span, of a metric, of an attribute — comes from the OpenTelemetry GenAI conventions'
+          registry, not from this library.
+        </p>
+
+        <h2 id="failures">Failures</h2>
+        <p>
+          A handler that fails raises <code>Refused</code>. Its variant decides the JSON-RPC code the
+          other side sees, and everything else becomes <code>-32603</code> with no detail, because
+          what a handler trips over is not the caller's to read.
+        </p>
+<pre><code class="lang-mbt native">fn open_session(id : String) -> String raise @moonacp.Refused {
+  if id == "" {
+    raise @moonacp.Refused::Malformed(reason="a session needs an identifier")
+  }
+  id
+}</code></pre>
+        <p>
+          On the client side a failed call raises the error object the agent sent, so the code and
+          the message survive the trip:
+          <code>@moonacp.refused_of(failure)</code> turns one into a value this library's own
+          errors can be compared with.
+        </p>
+
+        <footer class="page">
+          <span>Apache-2.0 · MoonBit · schema v1.29.1</span>
+          <a href="https://github.com/moonbitstack/moonacp">GitHub</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="site.js" defer></script>
+  </body>
+</html>

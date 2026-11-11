@@ -139,10 +139,45 @@ async fn main {
 |:--|:--|:--|
 | stdio | `@stdio.serve_stdio`, `@stdio.spawn` | One JSON-RPC message per line on the process's own streams. The transport an editor uses when it launches an agent. |
 | ASGI | `@asgi.to_asgi` | One endpoint: `POST` for client-to-agent messages, long-lived `GET` streams for the answers, `DELETE` to end a connection, and a `WebSocket` upgrade carrying the same messages on one channel. |
+| remote | `@remote.open` | The editor's side of that endpoint. `open` builds the connection and sends nothing; the first message connects it, `run` receives on it, and `close` ends it on both sides. |
+
+A session's own stream carries its turn: while the client has one open for a session, that
+session's updates and answers go there, and everything else — `initialize`, `session/new`, the
+answers to calls that name no session — goes to the connection's stream. A client that reads one
+stream reads everything, and one that opens a stream per session reads each turn where it started.
 
 The remote transport follows the protocol's request for discussion of 2026-11-04. That document is
 not final, and the schema has no member for the connection identifier it introduces: the identifier
 travels in the `initialize` answer's `_meta` and in an `Acp-Connection-Id` header.
+
+## Reaching an agent across the network
+
+`@asgi` serves; `@remote` is the other half, for an editor whose agent is not a child process. It
+speaks the same messages to a running server, and a server's per-session streams are opened as the
+calls that need them are made.
+
+```moonbit native
+async fn reach(editor : &@moonacp.Client) -> Unit raise {
+  let remote = @remote.open(editor, "http://127.0.0.1:12000/acp")
+  let conn = remote.conn()
+  @async.with_task_group(async fn(group) {
+    group.spawn_bg(async fn() { remote.run() })
+    let started = conn.initialize({
+      protocol_version: @moonacp.protocol_version,
+      client_capabilities: @moonacp.ClientCapabilities::none(),
+      client_info: None,
+      meta: None,
+    })
+    println("talking to " + started.protocol_version.to_string())
+    // Everything the agent says arrives while `run` runs; `close` is what ends the exchange.
+    remote.close()
+  })
+}
+```
+
+`run` is in a task of its own because every stream the connection opens is read by a task of its
+own — the HTTP client underneath reads one stream per task — and the peer takes its messages from
+one queue.
 
 ## Traces and metrics
 
@@ -222,6 +257,12 @@ pub(open) trait Client {
 
 pub fn serve(&Agent, &@peer.Frames) -> @peer.Peer
 pub fn connect(&Client, &@peer.Frames) -> Conn
+
+// The editor's side of the remote transport
+pub fn open(&Client, String, headers? : Array[(String, String)], timeout? : Int32) -> Remote
+pub fn Remote::conn(Self) -> Conn
+pub async fn Remote::run(Self) -> Unit
+pub async fn Remote::close(Self) -> Unit
 pub async fn Conn::initialize(Self, Initialize) -> Initialized raise Refused
 pub async fn Conn::prompt(Self, Prompt) -> PromptResult raise Refused
 pub async fn Conn::cancel(Self, String) -> Unit raise Refused
@@ -255,6 +296,7 @@ Nothing is listed as passing that does not run on every push.
 | This library → official TypeScript agent | `@agentclientprotocol/sdk` 2.4.0 | conversation, streamed answer |
 | This library → official Python agent | `agent-client-protocol` 0.12.1 | conversation, streamed answer |
 | Official Rust client over HTTP → this library's server | `agent-client-protocol-http` 5.0.0 | initialize, session, streamed turn, cancel, list |
+| This library's client over HTTP → official Rust agent | `agent-client-protocol-http` 5.0.0, `server` | initialize, session, streamed turn |
 | The signals this library writes against the GenAI registry | `weaver` 0.28.0, conventions `aa3b7f4` | spans and metrics, no findings |
 
 ## License

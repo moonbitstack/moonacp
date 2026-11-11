@@ -26,6 +26,11 @@ PACKAGES = [
     ("moonacp/stdio", "Serving an agent on the process's own streams.", SRC / "stdio"),
     ("moonacp/asgi", "Serving an agent over HTTP streams and a WebSocket.", SRC / "asgi"),
     (
+        "moonacp/remote",
+        "Reaching an agent over HTTP, from the editor's side.",
+        SRC / "remote",
+    ),
+    (
         "moonacp/otel",
         "Tracing both sides with the OpenTelemetry GenAI conventions.",
         SRC / "otel",

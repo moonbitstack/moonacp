@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Playground — MoonACP</title>
+    <meta
+      name="description"
+      content="Write an ACP message and watch this library encode it: the request an editor sends, the updates an agent streams, and the frames they travel in."
+    />
+    <link rel="stylesheet" href="site.css" />
+    <script>
+      try {
+        const theme = localStorage.getItem("moonacp-theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        for (const side of ["nav", "rail"]) {
+          const width = Number(localStorage.getItem(`moonacp-${side}-w`));
+          if (Number.isFinite(width) && width >= 160 && width <= 600) {
+            document.documentElement.style.setProperty(`--${side}-w`, `${width}px`);
+          }
+        }
+      } catch (error) {
+        // Storage is off; the platform's own preference, and the default widths, still apply.
+      }
+    </script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="side">
+        <div class="brand">
+          <span>MoonACP<small>Agent Client Protocol</small></span>
+          <button
+            class="theme-toggle"
+            type="button"
+            aria-label="Switch to dark theme"
+            title="Click to switch, double-click to follow the system"
+            aria-pressed="false"
+          >
+            <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <circle cx="8" cy="8" r="3.1" />
+              <path d="M8 1.4v1.7M8 12.9v1.7M1.4 8h1.7M12.9 8h1.7M3.3 3.3l1.2 1.2M11.5 11.5l1.2 1.2M12.7 3.3l-1.2 1.2M4.5 11.5l-1.2 1.2" stroke-linecap="round" />
+            </svg>
+            <svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M13.4 9.9A5.7 5.7 0 0 1 6.1 2.6a5.7 5.7 0 1 0 7.3 7.3Z" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <nav>
+          <p>Start</p>
+          <a href="index.html">Overview</a>
+          <a href="guide.html">Guide</a>
+          <a href="index.html#consistency">Consistency</a>
+          <p>Reference</p>
+          <a href="api.html">API reference</a>
+          <p>Play</p>
+          <a href="playground.html" aria-current="page">The wire bench</a>
+        </nav>
+        <footer>Schema v1.29.1. Transport RFD of 2026-11-04.</footer>
+      </aside>
+      <div
+        class="splitter"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize the sidebar"
+        title="Drag to resize, double-click to reset"
+        aria-valuemin="184"
+        aria-valuemax="380"
+        aria-valuenow="244"
+        data-resize="nav"
+        tabindex="0"
+      ></div>
+
+      <main>
+        <span class="eyebrow">Playground</span>
+        <h1>The wire bench</h1>
+        <p class="lede">
+          A prompt, a stop reason, and whether the turn shows a tool call. What comes out is written
+          by this library running in the page — its own encoders, built from the same source as the
+          one the server uses — so the shapes below are the shapes that would travel.
+        </p>
+
+        <form class="bench" data-bench onsubmit="return false">
+          <div class="bench-controls">
+            <label>
+              Prompt
+              <textarea name="text" rows="3">summarise the notes</textarea>
+            </label>
+            <label>
+              Stop reason
+              <select name="stop_reason">
+                <option value="end_turn">end_turn</option>
+                <option value="cancelled">cancelled</option>
+                <option value="max_tokens">max_tokens</option>
+                <option value="max_turn_requests">max_turn_requests</option>
+                <option value="refusal">refusal</option>
+              </select>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="tool_call" />
+              Show a tool call
+            </label>
+            <p class="blurb" style="margin: 0; font-size: 12px">
+              Everything is recomputed as you change it. Nothing leaves the page.
+            </p>
+          </div>
+
+          <div class="bench-out">
+            <div class="bench-slot">
+              <h4>The editor sends</h4>
+              <pre data-out="request"></pre>
+            </div>
+            <div class="bench-slot">
+              <h4>The agent streams</h4>
+              <div data-out="updates" class="bench-out"></div>
+            </div>
+            <div class="bench-slot">
+              <h4>The turn ends</h4>
+              <pre data-out="result"></pre>
+            </div>
+            <div class="bench-slot">
+              <h4>The frames they travel in</h4>
+              <div data-out="frames" class="bench-out"></div>
+            </div>
+          </div>
+        </form>
+
+        <p class="missing" data-missing hidden></p>
+
+        <h2>What this is doing</h2>
+        <p>
+          The page imports the library compiled to JavaScript and calls one function:
+          <code>preview(settings)</code> hands back the JSON text of each message. The prompt is a
+          <code>Prompt</code> value, the stream is a <code>SessionUpdate</code>, the ending is a
+          <code>PromptResult</code> — each encoded by the <code>ToJson</code> the library already
+          carries for it, and the stop reason read back through the library's own decoder, so an
+          unknown name is the library's answer rather than the page's.
+        </p>
+        <p>
+          The frames at the bottom are what the remote transport writes: the message after
+          <code>data:&nbsp;</code>, a blank line after it. That is the whole of what a stream carries
+          between two parties — nothing is added on the way.
+        </p>
+
+        <footer class="page">
+          <span>Apache-2.0 · MoonBit · schema v1.29.1</span>
+          <a href="https://github.com/moonbitstack/moonacp">GitHub</a>
+        </footer>
+      </main>
+    </div>
+
+    <script type="module" src="playground.js"></script>
+    <script src="site.js" defer></script>
+  </body>
+</html>

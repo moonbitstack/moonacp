@@ -1253,6 +1253,102 @@ footer.page {
   }
 }
 
+
+/* The playground: the settings on one side, what the library wrote on the other. The panels reuse
+   the code slab, so they scroll with the same thin bar and never wrap a message. */
+.bench {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: 22px;
+  margin: 20px 0 10px;
+  align-items: start;
+}
+
+.bench-controls {
+  border: 1px solid var(--line-strong);
+  background: var(--paper-raised);
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.bench-controls label {
+  display: grid;
+  gap: 6px;
+  font: 500 11px/1.2 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.bench-controls textarea,
+.bench-controls select {
+  font: 400 13px/1.5 var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  padding: 8px 10px;
+  width: 100%;
+  resize: vertical;
+}
+
+.bench-controls input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+}
+
+.bench-controls .toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 400 13px/1.2 var(--sans);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.bench-out {
+  display: grid;
+  gap: 16px;
+}
+
+.bench-slot h4 {
+  margin: 0 0 6px;
+  font: 500 11px/1.2 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.bench-out pre {
+  margin: 0;
+  max-height: 260px;
+  font-size: 12px;
+}
+
+.bench-out pre.frame {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.frame-head {
+  color: var(--accent-ink);
+}
+
+.missing {
+  border-left: 3px solid var(--warn);
+  background: var(--paper-sunk);
+  padding: 10px 14px;
+  color: var(--ink-soft);
+}
+
+@media (width <= 860px) {
+  .bench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
