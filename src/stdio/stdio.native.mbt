@@ -6,7 +6,7 @@
 /// on stdout, diagnostics on stderr.
 pub async fn serve_stdio(agent : &@moonacp.Agent) -> Unit {
   // The process's own two streams: an editor launches an agent and talks to it here.
-  let frames = @peer.lines(@stdio.stdin, @stdio.stdout)
+  let frames = @peer.lines(@async_stdio.stdin, @async_stdio.stdout)
   let peer = @moonacp.serve(agent, frames)
   peer.run()
 }
