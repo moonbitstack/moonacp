@@ -66,14 +66,16 @@ async fn respond(
 ///|
 /// A JSON-RPC error object with nobody's identifier: for a body that is not a message at all.
 fn bare_error(code : Int32, message : String) -> String {
-  Json::object({
-    "jsonrpc": Json::string("2.0"),
-    "id": Json::null(),
-    "error": Json::object({
-      "code": Json::number(code.to_double()),
-      "message": Json::string(message),
+  @moonjson.dumps(
+    Json::object({
+      "jsonrpc": Json::string("2.0"),
+      "id": Json::null(),
+      "error": Json::object({
+        "code": Json::number(code.to_double()),
+        "message": Json::string(message),
+      }),
     }),
-  }).stringify()
+  )
 }
 
 ///|
