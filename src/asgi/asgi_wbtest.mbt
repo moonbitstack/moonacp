@@ -222,7 +222,7 @@ async test "a session stream carries the updates and the answer of its POSTs" {
         ("acp-connection-id", connection),
       ]),
     )
-    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    common.inbox.put(HttpRequest(body=b"", more_body=false))
     guard common.outbox.get() is HttpResponseStart(status~, ..) else {
       abort("no stream")
     }
@@ -250,7 +250,7 @@ async test "a session stream carries the updates and the answer of its POSTs" {
         ("acp-session-id", "s-1"),
       ]),
     )
-    stream_side.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    stream_side.inbox.put(HttpRequest(body=b"", more_body=false))
     guard stream_side.outbox.get() is HttpResponseStart(..) else {
       abort("no stream")
     }
@@ -392,7 +392,7 @@ async test "a stream opened for a session the agent has not named yet carries th
         ("acp-connection-id", connection),
       ]),
     )
-    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    common.inbox.put(HttpRequest(body=b"", more_body=false))
     guard common.outbox.get() is HttpResponseStart(..) else {
       abort("no connection stream")
     }
@@ -406,7 +406,7 @@ async test "a stream opened for a session the agent has not named yet carries th
         ("acp-session-id", "stored"),
       ]),
     )
-    stream_side.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    stream_side.inbox.put(HttpRequest(body=b"", more_body=false))
     guard stream_side.outbox.get() is HttpResponseStart(status~, ..) else {
       abort("no stream")
     }
@@ -470,7 +470,7 @@ async test "a session's answer goes to the connection stream when no session str
         ("acp-connection-id", connection),
       ]),
     )
-    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    common.inbox.put(HttpRequest(body=b"", more_body=false))
     guard common.outbox.get() is HttpResponseStart(..) else {
       abort("no stream")
     }
@@ -530,7 +530,7 @@ async test "a DELETE ends the stream the connection holds open" {
         ("acp-connection-id", connection),
       ]),
     )
-    common.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    common.inbox.put(HttpRequest(body=b"", more_body=false))
     guard common.outbox.get() is HttpResponseStart(..) else {
       abort("no stream")
     }
@@ -540,7 +540,7 @@ async test "a DELETE ends the stream the connection holds open" {
       group,
       http_scope("DELETE", [("acp-connection-id", connection)]),
     )
-    closing.inbox.put(HttpRequest(body=Bytes::new(0), more_body=false))
+    closing.inbox.put(HttpRequest(body=b"", more_body=false))
     guard closing.outbox.get() is HttpResponseStart(status~, ..) else {
       abort("no answer")
     }

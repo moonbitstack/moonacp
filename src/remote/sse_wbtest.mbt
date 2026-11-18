@@ -23,7 +23,7 @@ test "a server that writes bare newlines is read the same way" {
 test "an event cut in half has no end yet" {
   assert_true(event_end(@utf8.encode("data: one\r\n")) is None)
   assert_true(event_end(@utf8.encode("data: one")) is None)
-  assert_true(event_end(Bytes::new(0)) is None)
+  assert_true(event_end(b"") is None)
 }
 
 ///|

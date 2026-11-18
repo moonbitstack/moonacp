@@ -399,7 +399,7 @@ fn Exports::new() -> Exports {
 ///|
 impl @otlp.Transport for Exports with fn send(self, request) {
   self.bodies.push(@utf8.decode_lossy(request.body))
-  { status: 200, headers: [], body: Bytes::new(0), }
+  { status: 200, headers: [], body: b"", }
 }
 
 ///|

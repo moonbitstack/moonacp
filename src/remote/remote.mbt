@@ -145,7 +145,7 @@ async fn Remote::read_from(
   let mut found : String? = None
   let mut reading = true
   while reading {
-    let buffer = self.buffers.get(key).unwrap_or(Bytes::new(0))
+    let buffer = self.buffers.get(key).unwrap_or(b"")
     match event_end(buffer) {
       Some((at, width)) => {
         let frame = buffer.exact_view(start=0, end=at)

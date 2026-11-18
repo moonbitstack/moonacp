@@ -99,7 +99,7 @@ async fn read_body(receive : @spec.Receive, limit : Int32) -> String? {
       done = true
     }
   }
-  let mut joined = Bytes::new(0)
+  let mut joined = b""
   for chunk in chunks {
     joined = joined.add(chunk)
   }
@@ -129,7 +129,7 @@ async fn stream_out(
   // for headers it cannot see yet — it has not been told the stream is open, so it cannot start to
   // use it. An empty chunk puts the head on the wire and is not an event: nothing to parse, nothing
   // to skip.
-  send(HttpResponseBody(body=Bytes::new(0), more_body=true)) catch {
+  send(HttpResponseBody(body=b"", more_body=true)) catch {
     _ => ()
   }
   @async.with_task_group(async fn(group) {
@@ -164,7 +164,7 @@ async fn stream_out(
       }
     }
   })
-  send(HttpResponseBody(body=Bytes::new(0), more_body=false)) catch {
+  send(HttpResponseBody(body=b"", more_body=false)) catch {
     _ => ()
   }
 }
