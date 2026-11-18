@@ -9,3 +9,6 @@ target/
 # one only when someone checks the interop out: nobody installing this needs the
 # server runtime they carry.
 integration/
+
+# Examples are read in the repository and run in CI; they do not ship.
+src/examples/
