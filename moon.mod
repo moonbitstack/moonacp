@@ -1,6 +1,6 @@
 name = "moonbitstack/moonacp"
 
-version = "0.2.1"
+version = "0.2.2"
 
 readme = "README.md"
 
@@ -54,12 +54,12 @@ source = "src"
 
 import {
   "moonbitlang/async@0.22.5",
-  "moonbitstack/moonjrpc@0.2.0",
-  "moonbitstack/moonasgi@0.11.2",
-  "moonbitstack/moonfetch@0.2.0",
-  "moonbitstack/moonjson@0.5.0",
-  "moonbitstack/moonhttp@0.16.0",
-  "moonbitstack/moonnet@0.2.0",
-  "moonbitstack/moonseed@0.2.0",
-  "moonbitstack/moontel@0.2.1",
+  "moonbitstack/moonjrpc@0.2.1",
+  "moonbitstack/moonasgi@0.11.3",
+  "moonbitstack/moonfetch@0.2.1",
+  "moonbitstack/moonjson@0.5.1",
+  "moonbitstack/moonhttp@0.16.1",
+  "moonbitstack/moonnet@0.2.2",
+  "moonbitstack/moonseed@0.2.1",
+  "moonbitstack/moontel@0.2.3",
 }
